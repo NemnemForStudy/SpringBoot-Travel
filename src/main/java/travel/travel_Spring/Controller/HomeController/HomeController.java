@@ -13,4 +13,9 @@ public class HomeController {
         model.addAttribute("images", Arrays.asList("Image/사진1.png", "Image/사진2.png", "Image/사진3.png"));
         return "index";
     }
+
+    @GetMapping("/myPage")
+    public String myPage(Model model) {
+        return "myPage";
+    }
 }

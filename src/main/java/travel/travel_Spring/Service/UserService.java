@@ -28,4 +28,8 @@ public class UserService {
             return true;
         }
     }
+
+    public boolean checkEmailExists(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
 }

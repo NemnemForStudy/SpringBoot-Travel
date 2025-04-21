@@ -31,6 +31,14 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	// PostgreSQL JDBC Driver
 	implementation 'org.postgresql:postgresql:42.7.3'
+
+	// JavaMailSender
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	compileOnly 'org.projectlombok:lombok:1.18.24'  // Lombok 의존성
+	annotationProcessor 'org.projectlombok:lombok:1.18.24'  // Lombok 어노테이션 처리기
 }
 
 tasks.named('test') {

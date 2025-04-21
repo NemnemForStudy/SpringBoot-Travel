@@ -1,11 +1,16 @@
 package travel.travel_Spring.UserEntity;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import java.time.LocalDate;
 
 // model 폴더이다. 이곳에 Entity 생성.
 @Entity
 @Table(name ="auth_user")
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     @Id
     // 자동으로 ID 증가 시킴.
@@ -20,10 +25,10 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "nickname", nullable = false)
+    @Column(name = "nickname", nullable = false, unique = true)
     private String nickname;
 
-    @Column(name = "phone_number", nullable = false)
+    @Column(name = "phone_number", nullable = false, unique = true)
     private String phoneNumber;
 
     @Column(name = "birth", nullable = false)

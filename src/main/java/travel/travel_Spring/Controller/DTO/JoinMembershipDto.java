@@ -8,9 +8,9 @@ public class JoinMembershipDto {
     private String password;
     private String nickname;
     private String phoneNumber;
-    private int birthYear;
-    private int birthMonth;
-    private int birthDay;
+    private String birthYear;
+    private String birthMonth;
+    private String birthDay;
 
     // Getter, Setter
     public String getEmail() {
@@ -45,32 +45,44 @@ public class JoinMembershipDto {
         this.phoneNumber = phoneNumber;
     }
 
-    public int getBirthYear() {
+    public String getBirthYear() {
         return birthYear;
     }
 
-    public void setBirthYear(int birthYear) {
+    public void setBirthYear(String birthYear) {
         this.birthYear = birthYear;
     }
 
-    public int getBirthMonth() {
+    public String getBirthMonth() {
         return birthMonth;
     }
 
-    public void setBirthMonth(int birthMonth) {
+    public void setBirthMonth(String birthMonth) {
         this.birthMonth = birthMonth;
     }
 
-    public int getBirthDay() {
+    public String getBirthDay() {
         return birthDay;
     }
 
-    public void setBirthDay(int birthDay) {
+    public void setBirthDay(String birthDay) {
         this.birthDay = birthDay;
     }
 
-    // LocalDate로 변환하는 메서드
     public LocalDate getBirth() {
-        return LocalDate.of(birthYear, birthMonth, birthDay);
+        try {
+            if (birthYear == null || birthMonth == null || birthDay == null ||
+                    birthYear.isEmpty() || birthMonth.isEmpty() || birthDay.isEmpty()) {
+                throw new IllegalArgumentException("생년월일을 올바르게 입력하세요.");
+            }
+
+            int year = Integer.parseInt(birthYear);  // String -> int로 변환
+            int month = Integer.parseInt(birthMonth);  // String -> int로 변환
+            int day = Integer.parseInt(birthDay);  // String -> int로 변환
+            return LocalDate.of(year, month, day);
+
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("생년월일 형식이 올바르지 않습니다.");
+        }
     }
 }

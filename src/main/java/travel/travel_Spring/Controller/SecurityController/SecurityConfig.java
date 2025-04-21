@@ -4,11 +4,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -17,7 +24,7 @@ public class SecurityConfig {
             .authorizeRequests()
             // 로그인 여부와 상관없이 도메인에 진입할 수 있게 지정해줘야 함.
             // Image를 지정해줘야 로그인하지 않을 때도 이미지가 나오게 된다.
-            .antMatchers("/", "/loginView", "/css/**", "/js/**", "/index", "/joinMembership", "/Image/**").permitAll() // 이 부분 중요
+            .antMatchers("/", "/loginView", "/css/**", "/js/**", "/index", "/joinMembership", "/Image/**", "/api/**").permitAll() // 이 부분 중요
             .anyRequest().authenticated()
         .and()
             .formLogin()

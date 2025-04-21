@@ -23,27 +23,30 @@ public class UserController {
     // 회원가입 처리
     @PostMapping("/joinMembership")
     public String joinMembership(@ModelAttribute JoinMembershipDto joinMembershipDTO, Model model) {
-        // DTO에서 LocalDate로 변환
-        LocalDate birth = joinMembershipDTO.getBirth();
+        try {
+            LocalDate birth = joinMembershipDTO.getBirth();
 
-        // User 객체 생성
-        User user = new User(
-                joinMembershipDTO.getEmail(),
-                joinMembershipDTO.getPassword(),
-                joinMembershipDTO.getNickname(),
-                joinMembershipDTO.getPhoneNumber(),
-                birth
-        );
+            User user = new User(
+                    joinMembershipDTO.getEmail(),
+                    joinMembershipDTO.getPassword(),
+                    joinMembershipDTO.getNickname(),
+                    joinMembershipDTO.getPhoneNumber(),
+                    birth
+            );
 
-        // 사용자 저장
-        boolean message = userService.saveUser(user);
-        model.addAttribute("message", message);
+            boolean message = userService.saveUser(user);
+            model.addAttribute("message", message);
 
-        // 회원가입 성공 시 index 페이지로 리다이렉트
-        if (!message) {
-            return "joinMembership";
-        } else {
-            return "index";
+            if (!message) {
+                model.addAttribute("errorMessage", "회원가입에 실패했습니다. 다시 시도해주세요.");
+                return "joinMembership"; // 에러 시에도 그대로 stay
+            } else {
+                return "index";
+            }
+
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", e.getMessage()); // 예외 메시지를 model에 담음
+            return "joinMembership"; // 다시 그 페이지로
         }
     }
 }

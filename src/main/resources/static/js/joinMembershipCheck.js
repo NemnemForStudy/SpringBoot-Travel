@@ -51,8 +51,5 @@ function validateForm(event) {
         alert("생년월일을 올바르게 입력하세요.");
         return false;
     }
-
-    alert("회원가입이 완료되었습니다!");
-    window.location.href = "/";
     return false;
 }

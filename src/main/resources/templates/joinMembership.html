@@ -23,9 +23,19 @@
 </head>
 
 <header class="logo">
-    <div class="text-center" style="margin: 100px 100px 100px;">
-        <h2>어서오세요! 수정은 계속 해야합니다.</h2>
-        <p>test</p>
+    <div style="display: flex; justify-content: center; gap: 100px; margin: 50px;">
+        <div style="text-align: center;">
+            <a href="/">
+                <img src="/Image/icon_home.png" alt="icon_home" style="height: 100px; width: 100px;"/>
+            </a>
+            <p>홈페이지 화면으로!</p>
+        </div>
+        <div style="text-align: center;">
+            <a href="/loginView">
+                <img src="/Image/icon_login.png" alt="icon_login" style="height: 100px; width: 100px;"/>
+            </a>
+            <p>로그인 화면으로!</p>
+        </div>
     </div>
 </header>
 
@@ -112,6 +122,7 @@
 <script src="/js/passwordLengthCheck.js"></script>
 <script src="/js/sendEmail.js"></script>
 <script src="/js/signup.js"></script>
+<script src="/js/joinMembershipCheck.js"></script>
 
 <!-- <script th:if="${errorMessage != null}">
     alert([[${errorMessage}]]);

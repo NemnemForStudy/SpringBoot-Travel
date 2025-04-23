@@ -5,6 +5,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -12,15 +15,13 @@ import travel.travel_Spring.Controller.DTO.*;
 import travel.travel_Spring.Service.EmailService;
 import travel.travel_Spring.Service.LoginService;
 import travel.travel_Spring.Service.UserService;
-import travel.travel_Spring.UserEntity.User;
 import travel.travel_Spring.repository.UserRepository;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.time.LocalDate;
-import java.util.Collections;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,6 +99,12 @@ public class UserApiController {
 
     @PostMapping("/sendCode")
     public ResponseEntity<String> sendCode(@RequestBody EmailDto dto, HttpSession session) {
+
+        String email = dto.getEmail();
+        if(emailService.isEmailExists(email)) {
+            return ResponseEntity.badRequest().body("이미 회원가입 된 이메일입니다.");
+        }
+
         try {
             String code = generateCode(); // 인증코드 생성 로직
             long timeStamp = System.currentTimeMillis(); // 현재 시간 (밀리초)
@@ -150,11 +157,14 @@ public class UserApiController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody @Validated JoinMembershipDto dto, HttpSession session) {
-        Map<String, Object> codeData = (Map<String, Object>) session.getAttribute("emailCode : " + dto.getEmail());
+    public ResponseEntity<Map<String, Object>> signup(@RequestBody @Validated JoinMembershipDto dto, HttpSession session) {
+            Map<String, Object> codeData = (Map<String, Object>) session.getAttribute("emailCode : " + dto.getEmail());
 
+        Map<String ,Object> response = new HashMap<>();
         if(codeData == null) {
-            return ResponseEntity.badRequest().body("인증 코드가 없습니다.");
+            response.put("success", false);
+            response.put("message", "인증코드가 없습니다.");
+            return ResponseEntity.badRequest().body(response);
         }
 
         String sentCode = (String) codeData.get("code");
@@ -164,39 +174,32 @@ public class UserApiController {
         // 인증 코드 만료 (3분 = 180_000ms)
         if(currentTime - sentTime > 180_000) {
             session.removeAttribute("emailCode : " + dto.getEmail());
-            return ResponseEntity.badRequest().body("인증 코드가 만료되었습니다. 다시 시도해주세요.");
+            response.put("success", false);
+            response.put("message", "인증 코드가 만료되었습니다. 다시 시도해주세요.");
+            return ResponseEntity.badRequest().body(response);
         }
 
-        if(!sentCode.equals(dto.getVerificationCode())) {
-            return ResponseEntity.badRequest().body("인증 코드가 일치하지 않습니다.");
+        if(!sentCode.equals(dto.getCode())) {
+            response.put("success", false);
+            response.put("message", "인증 코드가 일치하지 않습니다.");
+            return ResponseEntity.badRequest().body(response);
         }
 
         try {
             userService.signup(dto);
             session.removeAttribute("emailCode : " + dto.getEmail());
-            return ResponseEntity.ok("회원가입 성공!");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
-        }
-    }
 
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, Boolean>> login(@RequestBody LoginDto dto) {
-        boolean loginSuccess = userService.login(dto.getEmail(), dto.getPassword());
-
-        if (!loginSuccess) {
-            System.out.println("로그인 실패: 이메일 또는 비밀번호 오류");
-        }
-
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("success", loginSuccess);
-
-        if(loginSuccess) {
+            response.put("success", true);
+            response.put("message", "회원가입 성공!");
             return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "서버 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 }

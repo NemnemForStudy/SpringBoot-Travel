@@ -1,6 +1,7 @@
 package travel.travel_Spring.UserEntity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 @Table(name ="auth_user")
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class User {
     @Id
     // 자동으로 ID 증가 시킴.

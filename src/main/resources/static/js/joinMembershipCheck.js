@@ -7,11 +7,17 @@ function validateForm(event) {
     const year = document.querySelector('[name="birthYear"]').value;
     const month = document.querySelector('[name="birthMonth"]').value;
     const day = document.querySelector('[name="birthDay"]').value;
+    const emailCode = document.querySelector('[name=emailCode]').value;
 
     // 이메일 유효성 검사
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailPattern.test(email)) {
         alert("이메일 형식이 올바르지 않습니다.");
+        return false;
+    }
+
+    if(!emailCode) {
+        alert("이메일 인증을 해주세요.");
         return false;
     }
 
@@ -46,5 +52,7 @@ function validateForm(event) {
         return false;
     }
 
-    return true; // 모든 검증이 통과하면 폼 제출
+    alert("회원가입이 완료되었습니다!");
+    window.location.href = "/";
+    return false;
 }

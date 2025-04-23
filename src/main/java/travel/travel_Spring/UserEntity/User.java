@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDate;
 
 // model 폴더이다. 이곳에 Entity 생성.
@@ -13,7 +14,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+
+// Redis에 세션 정보 저장할 때 직렬화해서 저장하는데 implements Serializable 추가
+public class User implements Serializable {
     @Id
     // 자동으로 ID 증가 시킴.
     @GeneratedValue(strategy = GenerationType.IDENTITY)

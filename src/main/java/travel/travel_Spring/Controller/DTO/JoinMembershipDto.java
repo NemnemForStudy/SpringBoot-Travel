@@ -14,15 +14,7 @@ public class JoinMembershipDto {
     private String birthYear;
     private String birthMonth;
     private String birthDay;
-    private String verificationCode;
-
-    public String getVerificationCode() {
-        return verificationCode;
-    }
-
-    public void setVerificationCode(String verificationCode) {
-        this.verificationCode = verificationCode;
-    }
+    private String code;
 
     // Getter, Setter
     public String getEmail() {
@@ -87,6 +79,14 @@ public class JoinMembershipDto {
 
     public void setPasswordEncoder(BCryptPasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public LocalDate getBirth() {

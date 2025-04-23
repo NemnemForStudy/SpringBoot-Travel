@@ -1,8 +1,6 @@
 package travel.travel_Spring.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import travel.travel_Spring.Controller.BCryptEncryptor.Encryptor;
 import travel.travel_Spring.Controller.DTO.JoinMembershipDto;
@@ -16,16 +14,14 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-    private PasswordEncoder passwordEncoder;
 
     // CRUD 작업을 제공하는 리포지토리.
     private UserRepository userRepository;
     private Encryptor encryptor;
     @Autowired
-    public UserService(Encryptor encryptor, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(Encryptor encryptor, UserRepository userRepository) {
         this.encryptor = encryptor;
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
     // 사용자 지정
     public boolean saveUser(User user) {
@@ -49,17 +45,18 @@ public class UserService {
         return encryptor.isMatch(rawPassword, storedPassword);
     }
 
+    public Optional<User> getEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
     public boolean login(String email, String password) {
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            System.out.println("Email : " + user.getEmail());
-            System.out.println("password : " + user.getPassword());
             // 비밀번호가 일치하는지 확인
             return checkPassword(password, user.getPassword());
         }
-        System.out.println("User not found for email: " + email);
         return false; // 이메일이 존재하지 않으면 로그인 실패
     }
 
@@ -73,6 +70,10 @@ public class UserService {
 
         if (email == null || nickname == null || password == null || phoneNumber == null || birthDate == null) {
             throw new IllegalArgumentException("필수 값이 누락되었습니다.");
+        }
+
+        if(userRepository.existsByPhoneNumber(dto.getPhoneNumber())) {
+            throw new IllegalArgumentException("이미 등록된 전화번호입니다.");
         }
 
         if (userRepository.existsByEmail(email)) {

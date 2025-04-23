@@ -1,5 +1,6 @@
 package travel.travel_Spring.Controller.LoginController;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,8 +17,8 @@ public class loginController {
 
     // 로그인 성공 후 이동 페이지
     @GetMapping("/loginAfterIndexView")
-    public String loginAfterIndexView(Model model) {
-        return "redirect:/";
+    public String loginAfterIndexView() {
+        return "index";
     }
 
     @GetMapping("/index")

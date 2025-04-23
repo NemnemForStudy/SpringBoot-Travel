@@ -11,8 +11,13 @@
 
 <header class="logo">
     <div class="text-center" style="margin: 100px 100px 100px;">
-        <h2>어서오세요! 수정은 계속 해야합니다.</h2>
-        <p>test</p>
+        <h2>어서오세요! Travel-FootPrints에 오신걸 환영합니다!</h2>
+        <p style="margin: 20px">회원가입을 하지 않으셨나요?</p>
+        <div style="text-align: center">
+            <a href="/joinMembership">
+                <button type="button" class="btn btn-primary" id="moveToSignup" href="/joinMembership" role="button">회원가입하러 가기!</button>
+            </a>
+        </div>
     </div>
 </header>
 
@@ -20,24 +25,27 @@
 <body>
 <div style="margin: 0 500px 0;">
     <form th:action="@{/login}" method="post">
-    <!--    이메일 입력   -->
+        <!-- 이메일 (username) 입력 -->
         <div class="mb-3">
+            <!-- 로그인 할 때는 SecurityConfig로 로그인을 하기 때문에 name을 username으로 지정해야한다고 한다. -->
             <label for="emailInput" class="form-label">이메일</label>
-            <input type="email" class="form-control" name="email" id="emailInput" placeholder="Enter Your Email">
+            <input type="email" class="form-control" name="username" id="emailInput" placeholder="Enter Your Email">
         </div>
-        <!--    패스워드 입력   -->
+        
+        <!-- 비밀번호 입력 -->
         <div class="mb-3">
             <label for="passwordInput" class="form-label">비밀번호</label>
             <input type="password" class="form-control" name="password" id="passwordInput" placeholder="Enter Your Password">
         </div>
-        <!--    로그인 버튼    -->
+        
+        <!-- 로그인 버튼 -->
         <div class="mb-3">
-            <button type="submit" class="btn btn-primary" id="loginBtn" href="/loginAfterIndexView" role="button" style="width: 100%">로그인</button>
+            <button type="submit" class="btn btn-primary" id="loginBtn" style="width: 100%">로그인</button>
         </div>
     </form>
 </div>
+
 <!-- Bootstrap JS CDN (반응형 토글 버튼 등 작동하려면 필요함) -->
-<script src="/js/loginFunction.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

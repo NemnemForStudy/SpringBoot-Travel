@@ -34,6 +34,7 @@ sendCodeBtn.addEventListener('click', function(){
         // 이메일 비어있는지 확인
         if(!email) {
             alert("먼저 이메일을 입력해주세요.");
+            return;
         }
 
         //인증 코드 전송

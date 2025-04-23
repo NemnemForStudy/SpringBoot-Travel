@@ -1,22 +1,44 @@
 package travel.travel_Spring.Controller.SecurityController;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import travel.travel_Spring.Controller.LoginController.LoginFailureHandler;
+import travel.travel_Spring.Controller.LoginController.LoginUserDetails;
+import travel.travel_Spring.Service.LoginUserDetailsService;
+import travel.travel_Spring.repository.UserRepository;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private LoginFailureHandler loginFailureHandler;
+
+    @Autowired
+    private LoginUserDetailsService loginUserDetailsService;
+
+    // PasswordEncoder 설정
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // UserDetailsService 설정
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return new LoginUserDetailsService(userRepository);
+    }
+
+    // SecurityFilterChain 설정
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -30,16 +52,22 @@ public class SecurityConfig {
             .formLogin()
             .loginPage("/loginView")
             .loginProcessingUrl("/login")
-            .defaultSuccessUrl("/", true)
-            .failureUrl("/loginView?error=true")
+            .failureHandler(loginFailureHandler)
             .permitAll() // 여기도 authorizeRequests() 안에 있어야 함
         .and()
             .logout()
             .logoutUrl("/logout")
             .logoutSuccessUrl("/")
             .invalidateHttpSession(true)
-            .deleteCookies("JSESSIONID");
+            .deleteCookies("JSESSIONID"); // 쿠키 삭제
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.userDetailsService(loginUserDetailsService).passwordEncoder(passwordEncoder());
+        return authenticationManagerBuilder.build();
     }
 }

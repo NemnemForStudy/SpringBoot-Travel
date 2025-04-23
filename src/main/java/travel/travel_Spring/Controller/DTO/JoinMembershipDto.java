@@ -1,16 +1,28 @@
 package travel.travel_Spring.Controller.DTO;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import java.time.LocalDate;
 
 public class JoinMembershipDto {
 
     private String email;
     private String password;
+    private BCryptPasswordEncoder passwordEncoder;
     private String nickname;
     private String phoneNumber;
     private String birthYear;
     private String birthMonth;
     private String birthDay;
+    private String verificationCode;
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
 
     // Getter, Setter
     public String getEmail() {
@@ -67,6 +79,14 @@ public class JoinMembershipDto {
 
     public void setBirthDay(String birthDay) {
         this.birthDay = birthDay;
+    }
+
+    public BCryptPasswordEncoder getPasswordEncoder() {
+        return passwordEncoder;
+    }
+
+    public void setPasswordEncoder(BCryptPasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
     }
 
     public LocalDate getBirth() {

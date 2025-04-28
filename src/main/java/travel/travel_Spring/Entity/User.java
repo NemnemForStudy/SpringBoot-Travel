@@ -1,4 +1,4 @@
-package travel.travel_Spring.UserEntity;
+package travel.travel_Spring.Entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +15,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
 
 // Redis에 세션 정보 저장할 때 직렬화해서 저장하는데 implements Serializable 추가
 public class User implements Serializable {
@@ -24,7 +25,6 @@ public class User implements Serializable {
     private Long id;
 
     // user 대신 다른 이름 사용
-    @Getter
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 

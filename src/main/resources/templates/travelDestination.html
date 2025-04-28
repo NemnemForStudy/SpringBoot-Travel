@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-    xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <!-- head 태그는 브라우저가 페이지를 어떻게 표시할지에 대한 정보를 넣는 곳이다. -->
 <head>
     <meta charset="UTF-8">
@@ -28,21 +28,13 @@
     <div class="container-fluid">
         <!-- d-block : 인라인 요소를 block 으로 바꿔줌, text-center : 텍스트 가운데로 -->
         <div class="container d-flex justify-content-center">
-            <a class="navbar-brand" href="/">여행 사이트</a>
+            <a class="navbar-brand" href="/">여행지</a>
         </div>
 
         <!-- 로그인 상태일 때 -->
-        <!-- sec:authorize="isAuthenticated()" ->  -->
         <div sec:authorize="isAuthenticated()">
-            <a class="btn btn-primary" href="/myPage" role="button">마이 페이지</a>
+            <a class="btn btn-primary" href="/write" role="button">글쓰기</a>
             <a class="btn btn-primary" href="/logout" role="button">로그아웃</a>
-        </div>
-
-        <!-- 비로그인 상태일 때 -->
-        <!-- sec:authorize="isAnonymous()" ->  -->
-        <div sec:authorize="isAnonymous()">
-            <a class="btn btn-primary" href="/loginView" role="button">로그인</a>
-            <a class="btn btn-primary" href="/joinMembership" role="button">회원가입</a>
         </div>
 
         <!-- 햄버거 버튼 -->

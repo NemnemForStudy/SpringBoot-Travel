@@ -2,14 +2,12 @@ package travel.travel_Spring.Controller.api;
 
 import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,10 +21,8 @@ import travel.travel_Spring.repository.UserRepository;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
-import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -246,16 +242,45 @@ public class UserApiController {
     }
 
     @PostMapping("/updateNickname")
-    public ResponseEntity<Map<String, Object>> updateNickname(@RequestBody NicknameDto dto, @AuthenticationPrincipal LoginUserDetails userDetails) {
+    public ResponseEntity<Map<String, Object>> updateNickname(@RequestBody NicknameDto dto, @AuthenticationPrincipal LoginUserDetails userDetails, HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         try {
+            // 사용자 DB 업데이트(DB)
             userService.updateNickname(userDetails.getUsername(), dto.getNickname());
+
+            // 세션에 있는 사용자 정보 갱신
+            userDetails.getUser().setNickname(dto.getNickname());
+            // 세션 갱신
+            session.setAttribute("userDetails", userDetails);
+
             response.put("success", true);
+            response.put("nickname", dto.getNickname());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // 마이페이지 닉네임 데이터 값 가져오기
+    @GetMapping("/getUserNickname")
+    public ResponseEntity<Map<String, Object>> getUserNickname(@AuthenticationPrincipal LoginUserDetails userDetails) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+            headers.add("Pragma", "no-cache");
+            headers.add("Expires", "0");
+
+            String nickname = userDetails.getNickname();  // LoginUserDetails에서 닉네임 가져오기
+            response.put("success", true);
+            response.put("nickname", nickname);
+            return ResponseEntity.ok().headers(headers).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 }

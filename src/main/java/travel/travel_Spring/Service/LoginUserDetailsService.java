@@ -4,7 +4,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import travel.travel_Spring.Controller.LoginController.LoginUserDetails;
+import travel.travel_Spring.UserDetails.LoginUserDetails;
 import travel.travel_Spring.UserEntity.User;
 import travel.travel_Spring.repository.UserRepository;
 
@@ -24,6 +24,7 @@ public class LoginUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다 : " + email));
+
         return new LoginUserDetails(user);
     }
 }

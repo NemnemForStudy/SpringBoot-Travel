@@ -1,7 +1,6 @@
 const signupForm = document.getElementById("joinForm");
 
 document.getElementById("signupBtn").addEventListener("click", function(event) {
-    debugger;
     const email = emailInput.value;  // 이메일 값
     const code = emailCode.value;  // 인증 코드 값
     const password = document.getElementById("passwordInput").value;  // 비밀번호 값

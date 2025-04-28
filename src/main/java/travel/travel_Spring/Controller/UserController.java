@@ -2,15 +2,16 @@ package travel.travel_Spring.Controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import travel.travel_Spring.Controller.DTO.JoinMembershipDto;
+import travel.travel_Spring.UserDetails.LoginUserDetails;
 import travel.travel_Spring.Service.UserService;
 import travel.travel_Spring.UserEntity.User;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 @Controller
 public class UserController {
@@ -52,18 +53,18 @@ public class UserController {
         }
     }
 
-    @GetMapping("/mypage")
-    public String getUserDataValue(Model model, Authentication authentication) {
-        String email = authentication.getName();
-        Optional<User> userOptional = userService.getEmail(email);
+    @GetMapping("/myPage")
+    public String getUserDataValue(Model model) {
+        // Security 사용하고 있으면 이렇게 사용해야 user 값을 가져 올 수 있다.
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = auth.getPrincipal();
 
-        if(userOptional.isPresent()) {
-            User user = userOptional.get();
+        if(principal instanceof LoginUserDetails) {
+            User user = ((LoginUserDetails) principal).getUser();
             model.addAttribute("user", user);
-        } else {
-            model.addAttribute("error", "사용자를 찾을 수 없습니다.");
+            return "myPage";
         }
 
-        return "mypage";
+        return "/";
     }
 }

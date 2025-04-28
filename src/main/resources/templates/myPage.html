@@ -25,7 +25,7 @@
             }
 
             .profile-details h4 {
-                margin: 0;
+                margin-bottom: 10px;
             }
 
             .profile-details p {
@@ -34,12 +34,6 @@
         </style>
     </head>
 
-<header class="logo">
-   <!-- <div class="text-center" style="margin: 100px 100px 100px;">
-       <h2>안녕하세요, <span th:text="${username} +">님 !</span></h2>
-       <p>test</p>
-    </div> -->
-</header>
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container-fluid">
         <!-- d-block : 인라인 요소를 block 으로 바꿔줌, text-center : 텍스트 가운데로 -->
@@ -53,33 +47,55 @@
 </nav>
 
 <body>
-    <div style="display: flex; justify-content: center; gap: 100px;">
-        <label for="profileUpload">
-            <div id="profilePreview" class="rounded-circle border border-secondary d-flex align-items-center justify-content-center"
-                 style="width: 250px; height: 250px; cursor: pointer; margin: 100px auto;">
-        
-                <!-- Bootstrap 사람 아이콘 SVG -->
-                <svg id="profileIcon" xmlns="http://www.w3.org/2000/svg"
-                     width="250" height="250" fill="gray"
-                     class="bi bi-person-circle" viewBox="0 0 16 16">
-                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
-                    <path fill-rule="evenodd"
-                          d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8
-                             m8-7a7 7 0 0 0-5.468 11.37
-                             C3.242 11.226 4.805 10 8 10
-                             s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
-                </svg>
-            </div>
-        </label>
-        <input type="file" id="profileUpload" accept="image/*" style="display: none;"/>
-        <div class="profile-details">
-            <h4>닉네임: <span th:text="${user.nickname}"></span></h4>
-            <p>이메일: <span th:text="${user.email}"></span></p>
-            <p>전화번호: <span th:text="${user.phoneNumber}"></span></p>
-            <p>생일 : <span th:text="${user.birthDate}"></span></p>
+<div style="display: flex; justify-content: center; align-items: center; gap: 80px; position: relative;">
+    <!-- 연필 아이콘 -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"
+         fill="currentColor" class="bi bi-pencil-square"
+         viewBox="0 0 16 16"
+         style="position: absolute; top: 20%; left: 45%; background: white; cursor: pointer;"
+         id="editIcon">
+        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+        <path fill-rule="evenodd"
+              d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+    </svg>
+
+    <!-- 이미지 미리보기 영역 -->
+    <div id="profilePreview" class="rounded-circle border border-secondary d-flex align-items-center justify-content-center"
+         style="width: 250px; height: 250px; margin: 100px; position: relative;">
+        <div style="pointer-events: none;">
+            <svg id="profileIcon" xmlns="http://www.w3.org/2000/svg"
+                 width="250" height="250" fill="gray"
+                 class="bi bi-person-circle" viewBox="0 0 16 16">
+                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                <path fill-rule="evenodd"
+                      d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8
+                     m8-7a7 7 0 0 0-5.468 11.37
+                     C3.242 11.226 4.805 10 8 10
+                     s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+            </svg>
         </div>
     </div>
 
+    <!-- 숨겨진 파일 업로드 input -->
+    <input type="file" id="profileUpload" accept="image/*" style="display: none;" />
+
+    <!-- 오른쪽: 유저 정보 + 버튼 -->
+    <div style="display: flex; flex-direction: column; justify-content: space-between; height: 250px;">
+        <div class="profile-details" style="margin-top: 50px">
+            <h4>아이디 : <span th:text="${user.email}"></span></h4>
+            <h4 id="nicknameDisplay">닉네임 : <span id="nicknameValue" th:text="${user.nickname}"></span><input type="text" id="nicknameInput" style="display: none;"/></h4>
+            <h4>전화번호 : <span th:text="${user.phoneNumber}"></span></h4>
+        </div>
+
+        <!-- 안쪽 요소를 오른쪽 끝으로 정렬할 때 사용하는 방법. -->
+        <div class="d-flex justify-content-end mt-3" style="gap: 10px;">
+            <button id="editBtn" class="btn btn-primary">수정</button>
+            <button id="saveBtn" class="btn btn-primary">확인</button>
+        </div>
+        
+    </div>
+</div>
 <script src="/js/changeProfile.js"></script>
+<script src="/js/updateNickname.js"></script>
 </body>
 </html>

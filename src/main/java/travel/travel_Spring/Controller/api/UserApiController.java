@@ -1,5 +1,6 @@
 package travel.travel_Spring.Controller.api;
 
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,24 +8,29 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import travel.travel_Spring.Controller.DTO.*;
 import travel.travel_Spring.Service.EmailService;
 import travel.travel_Spring.Service.LoginService;
 import travel.travel_Spring.Service.UserService;
+import travel.travel_Spring.UserDetails.LoginUserDetails;
 import travel.travel_Spring.repository.UserRepository;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api")
@@ -200,6 +206,56 @@ public class UserApiController {
             response.put("success", false);
             response.put("message", "서버 오류가 발생했습니다.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // 프로필 이미지 조회용 API
+    @GetMapping("/profileImg")
+    public ResponseEntity<String> getProfileImg(@AuthenticationPrincipal LoginUserDetails userDetails) {
+        String imgUrl = userService.getProfileImg(userDetails.getUsername());
+        return ResponseEntity.ok(imgUrl);
+    }
+
+    @PostMapping("/profileUpload")
+    public ResponseEntity<String> uploadProfileImage(@RequestParam("file")MultipartFile file,
+                                                @AuthenticationPrincipal LoginUserDetails userDetails) {
+        if(file.isEmpty()) {
+            return ResponseEntity.badRequest().body("파일이 없습니다.");
+        }
+
+        try {
+            // 파일 저장 경로 설정
+            String projectDir = System.getProperty("user.dir");
+            String uploadDir = projectDir + "/src/main/resources/static/Image/";
+            File directory = new File(uploadDir);
+            if(!directory.exists()) directory.mkdirs(); // 디렉토리 없으면 생성.
+
+            // 파일 이름 설정(UUID로 중복 방지)
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            File dest = new File(uploadDir + fileName);
+
+            file.transferTo(dest);
+
+            String imgUrl = "/Image/" + fileName;
+            userService.updateProfileImg(userDetails.getUsername(), imgUrl);
+
+            return ResponseEntity.ok(imgUrl);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("파일 업로드 실패 : " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/updateNickname")
+    public ResponseEntity<Map<String, Object>> updateNickname(@RequestBody NicknameDto dto, @AuthenticationPrincipal LoginUserDetails userDetails) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            userService.updateNickname(userDetails.getUsername(), dto.getNickname());
+            response.put("success", true);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
 }

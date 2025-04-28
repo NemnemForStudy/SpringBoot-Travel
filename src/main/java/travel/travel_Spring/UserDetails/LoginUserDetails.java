@@ -1,22 +1,26 @@
-package travel.travel_Spring.Controller.LoginController;
+package travel.travel_Spring.UserDetails;
 
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import travel.travel_Spring.UserEntity.User;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
 // UserDetails -> SecurityConfig에서 제공해주는 인터페이스이다. 의존성에 이미 포함되어 있는 클래스임.
-public class LoginUserDetails implements UserDetails {
+@Getter
+public class LoginUserDetails implements UserDetails, Serializable {
+    private static final long serialVersionUID = -1915867099792211621L;
     private final User user;
 
     public LoginUserDetails(User user) {
         this.user = user;
     }
 
-    public User getUser() {
-        return user;
+    public Long getId() {
+        return user.getId();
     }
 
     // getAuthorities() -> 사용자의 권한 정보 반환.

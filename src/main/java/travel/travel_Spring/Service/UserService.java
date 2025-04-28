@@ -61,7 +61,6 @@ public class UserService {
     }
 
     public void signup(JoinMembershipDto dto) {
-
         String email = dto.getEmail();
         String nickname = dto.getNickname();
         String password = dto.getPassword();
@@ -88,6 +87,25 @@ public class UserService {
         String encodedPassword = encryptor.encrypt(password);
 
         User user = new User(email, encodedPassword, nickname, phoneNumber, birthDate);
+        userRepository.save(user);
+    }
+
+    public void updateProfileImg(String email, String imgUrl) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        user.setProfileImgUrl(imgUrl);
+        userRepository.save(user);
+    }
+
+    public String getProfileImg(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        return user.getProfileImgUrl();
+    }
+
+    public void updateNickname(String email, String nickname) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         userRepository.save(user);
     }
 }

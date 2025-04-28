@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import travel.travel_Spring.Controller.BCryptEncryptor.Encryptor;
 import travel.travel_Spring.Controller.DTO.JoinMembershipDto;
-import travel.travel_Spring.UserEntity.User;
+import travel.travel_Spring.Entity.User;
 import travel.travel_Spring.repository.UserRepository;
 
 import java.time.LocalDate;
@@ -13,7 +13,6 @@ import java.util.Optional;
 // 자동으로 빈으로 등록 해 Autowired로 주입할 수 있게 된다.
 @Service
 public class UserService {
-
 
     // CRUD 작업을 제공하는 리포지토리.
     private UserRepository userRepository;
@@ -106,6 +105,7 @@ public class UserService {
     public void updateNickname(String email, String nickname) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        user.setNickname(nickname);
         userRepository.save(user);
     }
 }

@@ -3,7 +3,7 @@ package travel.travel_Spring.UserDetails;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import travel.travel_Spring.UserEntity.User;
+import travel.travel_Spring.Entity.User;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -39,6 +39,10 @@ public class LoginUserDetails implements UserDetails, Serializable {
     @Override
     public String getUsername() {
         return user.getEmail();
+    }
+
+    public String getNickname() {
+        return user.getNickname();
     }
 
     // isAccountNonExpired() 메소드는 계정이 만료되지 않았는지를 반환

@@ -5,7 +5,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import travel.travel_Spring.UserDetails.LoginUserDetails;
-import travel.travel_Spring.UserEntity.User;
+import travel.travel_Spring.Entity.User;
 import travel.travel_Spring.repository.UserRepository;
 
 // UserDetailsService는 Spring Security가 로그인 시 사용자 정보를 조회하는 데 사용하는 서비스 인터페이스

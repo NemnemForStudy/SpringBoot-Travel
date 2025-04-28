@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import travel.travel_Spring.Controller.DTO.JoinMembershipDto;
 import travel.travel_Spring.UserDetails.LoginUserDetails;
 import travel.travel_Spring.Service.UserService;
-import travel.travel_Spring.UserEntity.User;
+import travel.travel_Spring.Entity.User;
 
 import java.time.LocalDate;
 

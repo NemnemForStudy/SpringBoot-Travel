@@ -2,19 +2,20 @@ package travel.travel_Spring.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import travel.travel_Spring.Controller.Config.SecurityConfig;
 import travel.travel_Spring.Controller.DTO.BoardDto;
 import travel.travel_Spring.Entity.Board;
-import travel.travel_Spring.UserDetails.LoginUserDetails;
+import travel.travel_Spring.Entity.BoardPicture;
+import travel.travel_Spring.repository.BoardPictureRepository;
 import travel.travel_Spring.repository.BoardRepository;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 // 실제 비즈니스 로직을 처리. DB와 상호작용 처리. DTO를 엔터리로 변환해 저장, 조회함.
 
@@ -25,12 +26,16 @@ public class BoardService {
     @Autowired
     private final BoardRepository boardRepository;
 
+    @Autowired
+    private final BoardPictureRepository boardPictureRepository;
+
     public Board save(Board board) {
         return boardRepository.save(board);
     }
 
-    public BoardService(BoardRepository boardRepository) {
+    public BoardService(BoardRepository boardRepository, BoardPictureRepository boardPictureRepository) {
         this.boardRepository = boardRepository;
+        this.boardPictureRepository = boardPictureRepository;
     }
 
     @Transactional
@@ -38,7 +43,6 @@ public class BoardService {
         Board board = new Board();
         board.setTitle(dto.getTitle());
         board.setContent(dto.getContent());
-
         board.setAuthor(SecurityConfig.getCurrentNickname());
         board.setCreateTime(LocalDateTime.now());
         board.setUpdateTime(LocalDateTime.now());
@@ -46,6 +50,15 @@ public class BoardService {
         board.setLikeCount(0);
 
         boardRepository.save(board);
+
+        if(dto.getPictures() != null) {
+            for(String pictures : dto.getPictures()) {
+                BoardPicture boardPicture = new BoardPicture();
+                boardPicture.setBoard(board);
+                boardPicture.setPicture(pictures);
+                boardPictureRepository.save(boardPicture);
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -68,6 +81,21 @@ public class BoardService {
         board.setUpdateTime(LocalDateTime.now());
 
         return boardRepository.save(board);
+    }
+
+    // 글 조회
+    @Transactional(readOnly = true)
+    public List<BoardDto> getAllBoards() {
+        List<Board> boards = boardRepository.findAll();
+
+        return boards.stream()
+                .map(b -> {
+                    List<String> pictures = b.getBoardPictures().stream()
+                            .map(BoardPicture::getPicture)
+                            .collect(Collectors.toList());
+                    return new BoardDto(b.getTitle(), b.getContent(), pictures);
+                })
+                .collect(Collectors.toList());
     }
 
     // 글 삭제

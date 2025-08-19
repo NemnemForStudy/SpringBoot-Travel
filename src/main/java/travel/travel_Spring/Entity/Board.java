@@ -8,6 +8,8 @@ import lombok.Setter;
 import javax.persistence.*;
 import javax.validation.constraints.Min;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "board")
@@ -16,6 +18,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class Board {
+
+    // Entity → 2. Repository → 3. DTO → 4. Service → 5. Controller
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -43,4 +47,18 @@ public class Board {
     @Column(name = "like_Count")
     @Min(0)
     private int likeCount;
+
+    // List + @ElementCollection이 가장 JPA 친화적임.
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BoardPicture> pictures = new ArrayList<>();
+
+    // BoardPicture 리스트 getter
+    public List<BoardPicture> getBoardPictures() {
+        return pictures;
+    }
+
+    // BoardPicture 리스트 setter (선택 사항)
+    public void setBoardPictures(List<BoardPicture> boardPictures) {
+        this.pictures = boardPictures;
+    }
 }

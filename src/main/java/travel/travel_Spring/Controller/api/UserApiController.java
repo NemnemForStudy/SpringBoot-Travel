@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import travel.travel_Spring.Controller.DTO.*;
+import travel.travel_Spring.Entity.User;
 import travel.travel_Spring.Service.EmailService;
 import travel.travel_Spring.Service.LoginService;
 import travel.travel_Spring.Service.UserService;
@@ -23,6 +24,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpSession;
 import java.io.File;
+import java.security.Principal;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -262,6 +264,18 @@ public class UserApiController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    // db nickname 업데이트
+    @PostMapping("/api/updateNickname")
+    public ResponseEntity<Map<String, Object>> updateDBNickname(@RequestBody Map<String, String> request, Principal principal) {
+        String newNickname = request.get("nickname");
+        User user = userRepository.findByEmail(principal.getName()).orElseThrow();
+        String oldNickname = user.getNickname();
+
+        userService.updateNicknameAndBoards(oldNickname, newNickname);
+        return ResponseEntity.ok(Map.of("success", true, "nickname", newNickname));
+    }
+
 
     // 마이페이지 닉네임 데이터 값 가져오기
     @GetMapping("/getUserNickname")

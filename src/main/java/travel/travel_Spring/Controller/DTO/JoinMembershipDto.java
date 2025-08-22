@@ -1,12 +1,17 @@
 package travel.travel_Spring.Controller.DTO;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDate;
 
+@Getter
+@Setter
 public class JoinMembershipDto {
 
     private String email;
+    private String username;
     private String password;
     private BCryptPasswordEncoder passwordEncoder;
     private String nickname;
@@ -15,79 +20,6 @@ public class JoinMembershipDto {
     private String birthMonth;
     private String birthDay;
     private String code;
-
-    // Getter, Setter
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getBirthYear() {
-        return birthYear;
-    }
-
-    public void setBirthYear(String birthYear) {
-        this.birthYear = birthYear;
-    }
-
-    public String getBirthMonth() {
-        return birthMonth;
-    }
-
-    public void setBirthMonth(String birthMonth) {
-        this.birthMonth = birthMonth;
-    }
-
-    public String getBirthDay() {
-        return birthDay;
-    }
-
-    public void setBirthDay(String birthDay) {
-        this.birthDay = birthDay;
-    }
-
-    public BCryptPasswordEncoder getPasswordEncoder() {
-        return passwordEncoder;
-    }
-
-    public void setPasswordEncoder(BCryptPasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
 
     public LocalDate getBirth() {
         try {

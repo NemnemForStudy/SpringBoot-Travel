@@ -1,10 +1,13 @@
 package travel.travel_Spring.Service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import travel.travel_Spring.Controller.BCryptEncryptor.Encryptor;
 import travel.travel_Spring.Controller.DTO.JoinMembershipDto;
 import travel.travel_Spring.Entity.User;
+import travel.travel_Spring.repository.BoardRepository;
 import travel.travel_Spring.repository.UserRepository;
 
 import java.time.LocalDate;
@@ -12,9 +15,11 @@ import java.util.Optional;
 
 // 자동으로 빈으로 등록 해 Autowired로 주입할 수 있게 된다.
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     // CRUD 작업을 제공하는 리포지토리.
+    private BoardRepository boardRepository;
     private UserRepository userRepository;
     private Encryptor encryptor;
     @Autowired
@@ -61,6 +66,7 @@ public class UserService {
 
     public void signup(JoinMembershipDto dto) {
         String email = dto.getEmail();
+        String username = dto.getUsername();
         String nickname = dto.getNickname();
         String password = dto.getPassword();
         String phoneNumber = dto.getPhoneNumber();
@@ -85,7 +91,7 @@ public class UserService {
         // 비밀번호 암호화함.
         String encodedPassword = encryptor.encrypt(password);
 
-        User user = new User(email, encodedPassword, nickname, phoneNumber, birthDate);
+        User user = new User(email, username, encodedPassword, nickname, phoneNumber, birthDate);
         userRepository.save(user);
     }
 
@@ -102,10 +108,23 @@ public class UserService {
         return user.getProfileImgUrl();
     }
 
+    @Transactional
     public void updateNickname(String email, String nickname) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
         user.setNickname(nickname);
         userRepository.save(user);
     }
+
+    @Transactional
+    public void updateNicknameAndBoards(String oldNickname, String newNickname) {
+        // 1. User 닉네임 업데이트
+        User user = userRepository.findByNickname(oldNickname)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        user.setNickname(newNickname);
+
+        // 2. Board author 업데이트
+        boardRepository.updateAuthorByAuthor(oldNickname, newNickname);
+    }
+
 }

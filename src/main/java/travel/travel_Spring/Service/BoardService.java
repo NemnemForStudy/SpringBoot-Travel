@@ -8,6 +8,7 @@ import travel.travel_Spring.Controller.Config.SecurityConfig;
 import travel.travel_Spring.Controller.DTO.BoardDto;
 import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.BoardPicture;
+import travel.travel_Spring.repository.BoardLikeRepository;
 import travel.travel_Spring.repository.BoardPictureRepository;
 import travel.travel_Spring.repository.BoardRepository;
 
@@ -29,13 +30,17 @@ public class BoardService {
     @Autowired
     private final BoardPictureRepository boardPictureRepository;
 
+    @Autowired
+    private final BoardLikeRepository likeRepository;
+
     public Board save(Board board) {
         return boardRepository.save(board);
     }
 
-    public BoardService(BoardRepository boardRepository, BoardPictureRepository boardPictureRepository) {
+    public BoardService(BoardRepository boardRepository, BoardPictureRepository boardPictureRepository, BoardLikeRepository likeRepository) {
         this.boardRepository = boardRepository;
         this.boardPictureRepository = boardPictureRepository;
+        this.likeRepository = likeRepository;
     }
 
     @Transactional
@@ -68,20 +73,20 @@ public class BoardService {
         return response;
     }
 
-    public Board getBoardById(Long id) {
-        return boardRepository.findById(id).orElseThrow(() -> new RuntimeException("글을 찾을 수 없습니다."));
-    }
+//    public Board getBoardById(Long id) {
+//        return boardRepository.findById(id).orElseThrow(() -> new RuntimeException("글을 찾을 수 없습니다."));
+//    }
 
     // 글 수정
-    @Transactional
-    public Board updateBoard(Long id, BoardDto dto) {
-        Board board = getBoardById(id);
-        board.setTitle(dto.getTitle());
-        board.setContent(dto.getContent());
-        board.setUpdateTime(LocalDateTime.now());
-
-        return boardRepository.save(board);
-    }
+//    @Transactional
+//    public Board updateBoard(Long id, BoardDto dto) {
+//        Board board = getBoardById(id);
+//        board.setTitle(dto.getTitle());
+//        board.setContent(dto.getContent());
+//        board.setUpdateTime(LocalDateTime.now());
+//
+//        return boardRepository.save(board);
+//    }
 
     // 글 조회
     @Transactional(readOnly = true)
@@ -93,14 +98,69 @@ public class BoardService {
                     List<String> pictures = b.getBoardPictures().stream()
                             .map(BoardPicture::getPicture)
                             .collect(Collectors.toList());
-                    return new BoardDto(b.getTitle(), b.getContent(), pictures);
+                    return new BoardDto(
+                            b.getId(),
+                            b.getTitle(),
+                            b.getContent(),
+                            pictures,
+                            b.getCreateTime(),
+                            b.getUpdateTime(),
+                            b.getLikeCount()
+                    );
                 })
                 .collect(Collectors.toList());
+    }
+
+    // 단일 게시글 조회 메서드
+    @Transactional(readOnly = true)
+    public BoardDto getBoardById(Long id) {
+        Board board = boardRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("게시글이 없습니다."));
+
+        List<String> pictures = board.getBoardPictures().stream()
+                .map(BoardPicture::getPicture)
+                .collect(Collectors.toList());
+
+        return new BoardDto(
+                board.getId(),
+                board.getTitle(),
+                board.getContent(),
+                pictures,
+                board.getCreateTime(),
+                board.getUpdateTime(),
+                board.getLikeCount()
+        );
+    }
+
+    @Transactional
+    public int updateLike(Long id, boolean liked) {
+        Board board = boardRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("게시글 없음 : " + id));
+
+        if(liked) {
+            board.setLikeCount(board.getLikeCount() + 1);
+        } else {
+            board.setLikeCount(Math.max(0, board.getLikeCount() - 1));
+        }
+
+        boardRepository.save(board);
+        return board.getLikeCount();
     }
 
     // 글 삭제
     @Transactional
     public void deleteBoard(Long id) {
         boardRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Board findById(Long id) {
+        return boardRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글이 없습니다"));
+    }
+
+    // 유저가 이미 좋아요 눌렀는지 확인(User-Board 매핑 필요)
+    @Transactional(readOnly = true)
+    public boolean hasUserLiked(Long boardId, String email) {
+        return likeRepository.existsByBoardIdAndUserEmail(boardId, email);
     }
 }

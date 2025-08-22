@@ -3,6 +3,8 @@ const nicknameInput = document.getElementById("nicknameInput");
 const editBtn = document.getElementById("editBtn");
 const saveBtn = document.getElementById("saveBtn");
 
+saveBtn.style.display = "none";
+
 // 수정 버튼 클릭
 editBtn.addEventListener('click', function() {
     nicknameInput.value = nicknameValue.innerText; // 기존 닉네임을 input에 넣기
@@ -15,7 +17,6 @@ editBtn.addEventListener('click', function() {
 // 확인 버튼 클릭 시 동작
 // 저장(확인) 버튼 클릭
 saveBtn.addEventListener('click', function() {
-    debugger;
     const newNickname = nicknameInput.value;
 
     // 서버로 닉네임 업데이트 요청

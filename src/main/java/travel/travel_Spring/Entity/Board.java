@@ -9,7 +9,9 @@ import javax.persistence.*;
 import javax.validation.constraints.Min;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "board")
@@ -61,4 +63,8 @@ public class Board {
     public void setBoardPictures(List<BoardPicture> boardPictures) {
         this.pictures = boardPictures;
     }
+
+    @ManyToMany
+    @JoinTable(name = "board_likes", joinColumns = @JoinColumn(name = "board_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private Set<User> likedUsers = new HashSet<>();
 }

@@ -31,6 +31,7 @@ public class UserController {
 
             User user = new User(
                     joinMembershipDTO.getEmail(),
+                    joinMembershipDTO.getUsername(),
                     joinMembershipDTO.getPassword(),
                     joinMembershipDTO.getNickname(),
                     joinMembershipDTO.getPhoneNumber(),

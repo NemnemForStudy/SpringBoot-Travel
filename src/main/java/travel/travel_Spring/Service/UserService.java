@@ -117,14 +117,15 @@ public class UserService {
     }
 
     @Transactional
-    public void updateNicknameAndBoards(String oldNickname, String newNickname) {
+    public void updateNicknameAndBoards(Long userId, String newNickname) {
         // 1. User 닉네임 업데이트
-        User user = userRepository.findByNickname(oldNickname)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        user.setNickname(newNickname);
+//        String oldNickname = user.getNickname();
+//        user.setNickname(newNickname);
 
         // 2. Board author 업데이트
-        boardRepository.updateAuthorByAuthor(oldNickname, newNickname);
+//        boardRepository.updateAuthorByAuthor(oldNickname, newNickname);
     }
 
 }

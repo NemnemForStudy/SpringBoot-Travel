@@ -52,13 +52,38 @@
         </nav>
 
         <div class="container my-5">
-            <h2 id="title"></h2>
-            <p id="content"></p>
-            <div id="pictures" class="d-flex mb-3"></div>
-            <small id="createTimeAgo" class="text-muted"></small>
-            <div class="mt-2"><span id="likeCount"></span></div>
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10 col-12">
+                    <h2 id="title"></h2>
+                    <p id="content"></p>
+                    <div id="pictures" class="d-flex mb-3"></div>
+                    <small id="createTimeAgo" class="text-muted"></small>
+                    <div class="mt-2"><span id="likeCount"></span></div>
+
+                    <div class="container">
+                        <section class="section" id="section-3">
+                            <h1>오시는 길</h1>
+                            <div id="map" style="width: 70%; height: 300px; margin:auto"></div>
+                            <code id="snippet" class="snippet"></code>
+                        </section>
+                    </div>
+                    
+                    <!-- 각자 발급받은 Client ID 값 넣기 -->
+                    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=ggfedkbq9r"></script>
+                    <script id="code">
+                    var mapDiv = document.getElementById('map');
+                    var map = new naver.maps.Map(mapDiv);
+                    </script>
+
+                    <div class="mt-4">
+                        <label for="comment" class="form-label">댓글 작성</label>
+                        <textarea class="form-control" id="comment" rows="3" placeholder="댓글을 입력하세요"></textarea>
+                        <button class="btn btn-primary mt-2">등록</button>
+                    </div>
+                </div>
+            </div>
         </div>
-  
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/boardDetail.js"></script>
     <script src="/js/boardDetailFunction.js"></script>
 </body>

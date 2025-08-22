@@ -1,6 +1,7 @@
 package travel.travel_Spring.UserDetails;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import travel.travel_Spring.Entity.User;
@@ -11,6 +12,7 @@ import java.util.Collections;
 
 // UserDetails -> SecurityConfig에서 제공해주는 인터페이스이다. 의존성에 이미 포함되어 있는 클래스임.
 @Getter
+@Setter
 public class LoginUserDetails implements UserDetails, Serializable {
     private static final long serialVersionUID = -1915867099792211621L;
     private final User user;
@@ -40,6 +42,8 @@ public class LoginUserDetails implements UserDetails, Serializable {
     public String getUsername() {
         return user.getEmail();
     }
+
+    public String getEmail() { return user.getEmail(); }
 
     public String getNickname() {
         return user.getNickname();

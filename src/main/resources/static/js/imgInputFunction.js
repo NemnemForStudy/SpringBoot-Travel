@@ -69,9 +69,106 @@ function updatePreview() {
 function updateFileDisplay() {
     if (selectedFiles.length === 0) {
         fileDisplay.textContent = "파일이 선택되지 않았습니다.";
+        removeAllDropdowns();
     } else if (selectedFiles.length === 1) {
         fileDisplay.textContent = selectedFiles[0].name;
+        removeAllDropdowns();
     } else {
         fileDisplay.textContent = `${selectedFiles.length} pictures`;
+        createExtraMultiDropdowns(selectedFiles.length - 1); // n-1개 생성
     }
 }
+
+// 다중 드롭다운 생성 함수
+function createExtraMultiDropdowns(count) {
+    removeAllDropdowns();
+
+    const container = document.createElement("div");
+    container.id = "dropdownContainer";
+    container.style.display = "flex";
+    container.style.gap = "10px";
+    container.style.marginTop = "5px";
+    container.style.flexWrap = "wrap";
+
+    for(let i = 0; i < count; i++) {
+        const dropdown = document.createElement("select");
+        dropdown.className = "form-select";
+        dropdown.style.width = "120px";
+
+        // 옵션 추가
+        const defaultOption = document.createElement("option");
+        defaultOption.textContent = "선택하세요";
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        dropdown.appendChild(defaultOption);
+
+        const option1 = document.createElement("option");
+        option1.value = "Public transport";
+        option1.textContent = "대중교통";
+        dropdown.appendChild(option1);
+
+        const option2 = document.createElement("option");
+        option2.value = "Vehicle";
+        option2.textContent = "자동차, 택시";
+        dropdown.appendChild(option2);
+
+        const option3 = document.createElement("option");
+        option3.value = "Walking";
+        option3.textContent = "도보";
+        dropdown.appendChild(option3);
+
+        const option4 = document.createElement("option");
+        option4.value = "cycle";
+        option4.textContent = "자전거";
+        dropdown.appendChild(option4);
+
+        dropdown.addEventListener("change", () => {
+            console.log(`Dropdown ${i+1} 선택된 값 : ${dropdown.value}`);
+        });
+
+        container.appendChild(dropdown);
+    }
+
+    // 기존 DOM 요소 fileDisplay 뒤에 새로 만든 dropdown을 붙여라는 의미.
+    fileDisplay.insertAdjacentElement("afterend", container);
+}
+
+// 버튼 제거 함수
+function removeAllDropdowns() {
+    const container = document.getElementById("dropdownContainer");
+    if (container) container.remove();
+}
+
+// 폼 제출 시, 사진 + 드롭다운 값 추가
+const form = document.querySelector("form");
+
+form.addEventListener("submit", function(event) {
+    // 기본 제출 막고 FormData 처리
+    event.preventDefault();
+
+    const formData = new FormData(form);
+
+    // 선택된 사진 추가
+    selectedFiles.forEach(file => formData.append("files", file));
+
+    // 드롭다운 값 추가
+    const dropdowns = document.querySelectorAll("#dropdownnContainer select");
+    dropdowns.forEach((dropdown, idx) => {
+        formData.append(`dropdowns[$(idx)]`, dropdown.value);
+    });
+
+    fetch(form.action, {
+        method : "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("서버 응답 : ", data);
+        alert("업로드 완료!");
+        window.location.herf = "/travelDestination";
+    })
+    .catch(err => {
+        console.error(err);
+        alert("업로드 실패!");
+    })
+})

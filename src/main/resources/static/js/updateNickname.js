@@ -18,6 +18,7 @@ editBtn.addEventListener('click', function() {
 // 저장(확인) 버튼 클릭
 saveBtn.addEventListener('click', function() {
     const newNickname = nicknameInput.value;
+    console.log("newNickname : " + newNickname);
 
     // 서버로 닉네임 업데이트 요청
     fetch('/api/updateNickname', {
@@ -34,6 +35,7 @@ saveBtn.addEventListener('click', function() {
     .then(data => {
         if (data.success) {
             // 성공했으면 화면에 반영
+            debugger;
             nicknameValue.innerText = data.nickname;
             nicknameValue.style.display = "inline-block";
             nicknameInput.style.display = "none";
@@ -44,6 +46,7 @@ saveBtn.addEventListener('click', function() {
                 .then(response => response.json())
                 .then(data => {
                     if(data.success) {
+                        console.log(data.nickname);
                         nicknameValue.innerText = data.nickname;
                     } else {
                         console.error('닉네임 가져오기 실패');

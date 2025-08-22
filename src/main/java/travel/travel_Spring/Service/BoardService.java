@@ -2,6 +2,7 @@ package travel.travel_Spring.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import travel.travel_Spring.Controller.Config.SecurityConfig;
@@ -91,7 +92,8 @@ public class BoardService {
     // 글 조회
     @Transactional(readOnly = true)
     public List<BoardDto> getAllBoards() {
-        List<Board> boards = boardRepository.findAll();
+        // 게시글 최신순으로 보여줌.
+        List<Board> boards = boardRepository.findAll(Sort.by(Sort.Direction.DESC, "createTime"));
 
         return boards.stream()
                 .map(b -> {

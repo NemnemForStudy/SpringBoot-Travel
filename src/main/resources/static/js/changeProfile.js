@@ -43,7 +43,6 @@ document.getElementById('profileUpload').addEventListener('change', function(eve
 
 // 페이지 로딩 시 기존 프로필 이미지 가져오기
 window.addEventListener('DOMContentLoaded', () => {
-    debugger;
     fetch('/api/profileImg')
         .then(response => response.text())  // 서버에서 반환한 이미지를 텍스트로 받음
         .then(imgUrl => {

@@ -50,7 +50,6 @@ public class Board {
     @Min(0)
     private int likeCount;
 
-    // List + @ElementCollection이 가장 JPA 친화적임.
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardPicture> pictures = new ArrayList<>();
 

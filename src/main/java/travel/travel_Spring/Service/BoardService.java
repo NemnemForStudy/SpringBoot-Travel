@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import travel.travel_Spring.Controller.Config.SecurityConfig;
 import travel.travel_Spring.Controller.DTO.BoardDto;
+import travel.travel_Spring.Controller.board.BoardUpdateDto;
 import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.BoardPicture;
 import travel.travel_Spring.repository.BoardLikeRepository;
@@ -14,6 +15,7 @@ import travel.travel_Spring.repository.BoardPictureRepository;
 import travel.travel_Spring.repository.BoardRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,14 +59,24 @@ public class BoardService {
 
         boardRepository.save(board);
 
+        // pictures 처리
         if(dto.getPictures() != null) {
-            for(String pictures : dto.getPictures()) {
+            List<BoardPicture> pictureEntities = new ArrayList<>();
+
+            for(String pictureUrl : dto.getPictures()) {
                 BoardPicture boardPicture = new BoardPicture();
                 boardPicture.setBoard(board);
-                boardPicture.setPicture(pictures);
-                boardPictureRepository.save(boardPicture);
+                boardPicture.setPictureUrl(pictureUrl);
+                pictureEntities.add(boardPicture);
             }
+            // 한번에 저장
+            // saveAll 하면 자동으로 FK(board_id)에 연결됨.
+            boardPictureRepository.saveAll(pictureEntities);
+
+            // Board의 boardPictures 리스트에도 추가(양방향 연관관계)
+            board.setBoardPictures(pictureEntities);
         }
+
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -98,7 +110,7 @@ public class BoardService {
         return boards.stream()
                 .map(b -> {
                     List<String> pictures = b.getBoardPictures().stream()
-                            .map(BoardPicture::getPicture)
+                            .map(BoardPicture::getPictureUrl)
                             .collect(Collectors.toList());
                     return new BoardDto(
                             b.getId(),
@@ -120,7 +132,7 @@ public class BoardService {
                 .orElseThrow(() -> new RuntimeException("게시글이 없습니다."));
 
         List<String> pictures = board.getBoardPictures().stream()
-                .map(BoardPicture::getPicture)
+                .map(BoardPicture::getPictureUrl)
                 .collect(Collectors.toList());
 
         return new BoardDto(
@@ -147,6 +159,15 @@ public class BoardService {
 
         boardRepository.save(board);
         return board.getLikeCount();
+    }
+
+    @Transactional
+    public Board updateBoard(Long id, String title, String content) {
+        Board board = boardRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다."));
+        board.setTitle(title);
+        board.setContent(content);
+
+        return boardRepository.save(board);
     }
 
     // 글 삭제

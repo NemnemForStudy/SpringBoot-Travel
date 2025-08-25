@@ -3,29 +3,18 @@ document.getElementById('saveBtn').addEventListener('click', async function(even
     const title = document.getElementById('title').value;
     const content = document.getElementById('content').value;
 
-    console.log("제목:", title);
-    console.log("내용:", content);
+    // FormData 생성
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
 
-    // 파일을 Base64로 변환 후 JSON 문자열로 묶기
-    const pictures = await Promise.all(selectedFiles.map(file => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = e => resolve(e.target.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    }));
+    selectedFiles.forEach(file => {
+        formData.append("files", file);
+    });
 
     fetch('/board/write', { 
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            title: title,
-            content: content,
-            pictures: pictures  // 문자열로 전송
-        })
+        body: formData
     })
     .then(response => {
         if (!response.ok) throw new Error('서버 오류 발생');
@@ -44,3 +33,22 @@ document.getElementById('saveBtn').addEventListener('click', async function(even
         alert('에러 발생 : ' + error.message);
     });
 });
+
+document.addEventListener("DOMContentLoaded", async () => {
+    debugger;
+    const urlParams = new URLSearchParams(window.location.search);
+    const boardId = urlParams.get("boardId");
+
+    if(boardId) {
+        try {
+            const response = await fetch(`/api/board/${boardId}`);
+            const board = await response.json();
+
+            document.getElementById("title").value = board.title;
+            document.getElementById("content").value = board.content;
+
+        } catch(err) {
+            console.error("게시글 로딩 실패:", err);
+        }
+    }
+})

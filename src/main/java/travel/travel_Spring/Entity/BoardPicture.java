@@ -9,13 +9,16 @@ import javax.persistence.*;
 @Setter
 @Entity
 public class BoardPicture {
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String pictureUrl; // 실제 이미지 경로
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")
     private Board board;
 
-    @Column(columnDefinition = "TEXT")
-    private String picture;
+//    @Column(columnDefinition = "TEXT")
+//    private String picture;
 }

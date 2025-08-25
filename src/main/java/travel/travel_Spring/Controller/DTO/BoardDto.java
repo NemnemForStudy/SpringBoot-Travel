@@ -20,8 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BoardDto {
-
-    @Id
+    
     private long id;
 
     @NotBlank(message = "제목은 필수 입력 항목입니다.")
@@ -44,6 +43,8 @@ public class BoardDto {
     private LocalDateTime updateTime;
 
     private String createTimeAgo;
+    
+    // 이미지 url 리스트
     private List<String> pictures = new ArrayList<>();
     private long totalCount;
 

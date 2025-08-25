@@ -50,6 +50,7 @@ public class Board {
     @Min(0)
     private int likeCount;
 
+    // Board : BoardPicture = 1 : N
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardPicture> pictures = new ArrayList<>();
 

@@ -7,7 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
-<body>
+<body th:attr="data-board-id=${board.id}">
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
   <div class="container-fluid">
     <!-- d-block : 인라인 요소를 block 으로 바꿔줌, text-center : 텍스트 가운데로 -->
@@ -44,8 +44,8 @@
     <form th:action="@{/board/write}" method="post">
       <div class="mb-3">
         <label for="title" class="form-label">제목</label>
-        <input type="text" class="form-control" id="title" name="title" th:value="${board.title}">
-
+        <input type="text" class="form-control" id="title" name="title"
+       th:value="${board != null} ? ${board.title} : 'test'" placeholder="제목을 입력해주세요."/>
 <!--    파일 업로드    -->
         <div class="mb-3">
           <label id="fileLabel"style="margin-top: 2px" for="formFileMultiple" class="form-label">
@@ -58,7 +58,8 @@
 
         <label for="content" class="form-label">내용</label>
         <div class="d-flex align-items-start">
-          <textarea class="form-control" id="content" name="content" rows="10" th:text="${board.content}"></textarea>
+          <textarea class="form-control" id="content" name="content" rows="10"
+          th:text="${board != null} ? ${board.content} : ''" placeholder="내용을 입력해주세요."></textarea>
         </div>
       </div>
 

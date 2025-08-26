@@ -5,7 +5,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Service.BoardLikeService;
+import travel.travel_Spring.Service.BoardService;
+import travel.travel_Spring.Service.UserService;
+import travel.travel_Spring.repository.UserRepository;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +19,8 @@ import java.util.Map;
 @RequestMapping("/api/likes")
 public class BoardLikeController {
     private final BoardLikeService likeService;
+    private final BoardService boardService;
+    private final UserService userService;
 
     // 서버에서 자동으로 좋아요 상태 토글.
     @PostMapping("/{boardId}/like")
@@ -27,11 +33,21 @@ public class BoardLikeController {
     }
 
     @GetMapping("/{boardId}/status")
-    public ResponseEntity<Map<String, Object>> likeStatus(@PathVariable Long boardId, @AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
-        boolean liked = likeService.hasUserLiked(boardId, email);
+    public ResponseEntity<Map<String, Object>> likeAndEmailStatus(@PathVariable Long boardId, @AuthenticationPrincipal UserDetails userDetails) {
+        String currentUserEmail = userDetails.getUsername();
+
+        Board board = boardService.findById(boardId);
+        String authorNickname = board.getAuthor();
+        String authorEmail = userService.getEmailByNickname(authorNickname);
+
+        boolean liked = likeService.hasUserLiked(boardId, currentUserEmail);
         long count = likeService.getLikeCount(boardId);
 
-        return ResponseEntity.ok(Map.of("liked", liked, "likeCount", count));
+        return ResponseEntity.ok(Map.of(
+                "liked", liked,
+                "likeCount", count,
+                "currentUserEmail", currentUserEmail,
+                "authorEmail", authorEmail
+        ));
     }
 }

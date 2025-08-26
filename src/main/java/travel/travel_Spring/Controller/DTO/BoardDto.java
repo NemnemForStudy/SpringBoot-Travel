@@ -47,8 +47,18 @@ public class BoardDto {
     // 이미지 url 리스트
     private List<String> pictures = new ArrayList<>();
     private long totalCount;
+    
+    // 드롭다운 값
+    private List<String> selectedDropdownOptions = new ArrayList<>();
 
-    public BoardDto(long id, String title, String content, List<String> pictures, LocalDateTime createTime, LocalDateTime updateTime, int likeCount) {
+    public BoardDto(long id,
+                    String title,
+                    String content,
+                    List<String> pictures,
+                    LocalDateTime createTime,
+                    LocalDateTime updateTime,
+                    int likeCount,
+                    List<String> selectedDropdownOptions) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -56,6 +66,7 @@ public class BoardDto {
         this.createTimeAgo = getTimeAgo(createTime);
         this.updateTime = updateTime;
         this.likeCount = likeCount;
+        this.selectedDropdownOptions = selectedDropdownOptions;
     }
 
     private String getTimeAgo(LocalDateTime createTime) {

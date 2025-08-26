@@ -79,9 +79,14 @@ function updateFileDisplay() {
     }
 }
 
+// 전역 변수로 선언
+let selectedDropdownOptions = [];
+
 // 다중 드롭다운 생성 함수
-function createExtraMultiDropdowns(count) {
+function createExtraMultiDropdowns(count, preSelected = []) {
     removeAllDropdowns();
+
+    selectedDropdownOptions = []; // 초기화
 
     const container = document.createElement("div");
     container.id = "dropdownContainer";
@@ -102,28 +107,31 @@ function createExtraMultiDropdowns(count) {
         defaultOption.selected = true;
         dropdown.appendChild(defaultOption);
 
-        const option1 = document.createElement("option");
-        option1.value = "Public transport";
-        option1.textContent = "대중교통";
-        dropdown.appendChild(option1);
+        const options = [
+            { value: "Public transport", text: "대중교통" },
+            { value: "Vehicle", text: "자동차, 택시" },
+            { value: "Walking", text: "도보" },
+            { value: "Cycle", text: "자전거" }
+        ];
 
-        const option2 = document.createElement("option");
-        option2.value = "Vehicle";
-        option2.textContent = "자동차, 택시";
-        dropdown.appendChild(option2);
+        options.forEach(opt => {
+            const optionElem = document.createElement("option");
+            optionElem.value = opt.value;
+            optionElem.textContent = opt.text;
+            dropdown.appendChild(optionElem);
+        });
 
-        const option3 = document.createElement("option");
-        option3.value = "Walking";
-        option3.textContent = "도보";
-        dropdown.appendChild(option3);
-
-        const option4 = document.createElement("option");
-        option4.value = "cycle";
-        option4.textContent = "자전거";
-        dropdown.appendChild(option4);
+        // 서버에서 미리 선택된 값이 있다면 적용
+        if(preSelected[i]) {
+            dropdown.value = preSelected[i];
+            selectedDropdownOptions[i] = preSelected[i];
+        } else {
+            dropdown.value = ""; // default
+            selectedDropdownOptions[i] = null;
+        }
 
         dropdown.addEventListener("change", () => {
-            console.log(`Dropdown ${i+1} 선택된 값 : ${dropdown.value}`);
+            selectedDropdownOptions[i] = dropdown.value;
         });
 
         container.appendChild(dropdown);
@@ -146,15 +154,20 @@ form.addEventListener("submit", function(event) {
     // 기본 제출 막고 FormData 처리
     event.preventDefault();
 
+    // 선택되지 않은 드롭다운이 있으면 제출 막기
+    if(selectedDropdownOptions.some(val => val === null)) {
+        alert("모든 드롭다운 옵션을 선택해주세요.");
+        return;
+    }
+
     const formData = new FormData(form);
 
     // 선택된 사진 추가
     selectedFiles.forEach(file => formData.append("files", file));
 
     // 드롭다운 값 추가
-    const dropdowns = document.querySelectorAll("#dropdownnContainer select");
-    dropdowns.forEach((dropdown, idx) => {
-        formData.append(`dropdowns[$(idx)]`, dropdown.value);
+    selectedDropdownOptions.forEach((val, idx) => {
+        formData.append(`selectedDropdownOptions[$(idx)]`, val);
     });
 
     fetch(form.action, {
@@ -163,9 +176,8 @@ form.addEventListener("submit", function(event) {
     })
     .then(res => res.json())
     .then(data => {
-        console.log("서버 응답 : ", data);
         alert("업로드 완료!");
-        window.location.herf = "/travelDestination";
+        window.location.href = "/travelDestination";
     })
     .catch(err => {
         console.error(err);

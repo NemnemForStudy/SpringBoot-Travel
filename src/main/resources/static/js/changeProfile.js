@@ -32,7 +32,6 @@ document.getElementById('profileUpload').addEventListener('change', function(eve
         return response.text();
     })
     .then(result => {
-        console.log('업로드 성공 : ', result);
         alert('프로필 이미지가 업로드 되었습니다!');
     })
     .catch(err => {

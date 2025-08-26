@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let liked = false;
     let likeCount = 0;
 
+    const threeDotsBtn = document.getElementById("menuBtn");
+
     // 서버에서 초기 상태 불러오기
     fetch(`/api/likes/${boardId}/status`)
         .then(res => res.json())
@@ -20,12 +22,20 @@ document.addEventListener("DOMContentLoaded", () => {
             liked = data.liked;
             likeCount = data.likeCount;
             likeCountSpan.textContent = likeCount;
-
+            
+            currentUserEmail = data.currentUserEmail;
+            authorEmail = data.authorEmail;
             // 하트 상태 초기화
             if(liked) {
                 likeBtn.classList.add("bi-heart-fill");
             } else {
                 likeBtn.classList.add("bi-heart");
+            }
+
+            if(currentUserEmail !== authorEmail) {
+                threeDotsBtn.style.display = 'none';    
+            } else {
+                threeDotsBtn.style.display = 'block';
             }
         })
         .catch(err => console.error("초기 상태 불러오기 실패: ", err));
@@ -49,3 +59,4 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => console.error("서버 저장 실패 : ", err));
     });
 });
+

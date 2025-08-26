@@ -54,6 +54,15 @@ public class Board {
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BoardPicture> pictures = new ArrayList<>();
 
+    @ElementCollection
+    // 이렇게 하면 board_selected_options라는 테이블을 만들어줌.
+    @CollectionTable(
+            name = "board_selected_options", // 별도 테이블 이름
+            joinColumns = @JoinColumn(name = "board_id") // FK
+    )
+    @Column(name = "option_value") // 실제 옵션 값
+    private List<String> selectedDropdownOptions = new ArrayList<>();
+
     // BoardPicture 리스트 getter
     public List<BoardPicture> getBoardPictures() {
         return pictures;

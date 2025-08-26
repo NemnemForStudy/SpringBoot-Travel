@@ -128,4 +128,10 @@ public class UserService {
 //        boardRepository.updateAuthorByAuthor(oldNickname, newNickname);
     }
 
+    @Transactional
+    public String getEmailByNickname(String nickname) {
+        return userRepository.findByNickname(nickname)
+                .map(User::getEmail)
+                .orElse(null); // 없으면 null 반환
+    }
 }

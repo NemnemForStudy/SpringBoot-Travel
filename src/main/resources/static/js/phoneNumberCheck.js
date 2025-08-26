@@ -13,7 +13,6 @@ phoneNumberInput.addEventListener("blur", function() {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("data:", data);
         if (!data.valid) {
             phoneErrorMsg.style.display = 'block';
         } else {

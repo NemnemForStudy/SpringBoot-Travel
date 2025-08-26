@@ -7,18 +7,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import travel.travel_Spring.Controller.Config.SecurityConfig;
 import travel.travel_Spring.Controller.DTO.BoardDto;
-import travel.travel_Spring.Controller.board.BoardUpdateDto;
 import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.BoardPicture;
+import travel.travel_Spring.Entity.User;
 import travel.travel_Spring.repository.BoardLikeRepository;
 import travel.travel_Spring.repository.BoardPictureRepository;
 import travel.travel_Spring.repository.BoardRepository;
+import travel.travel_Spring.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 // 실제 비즈니스 로직을 처리. DB와 상호작용 처리. DTO를 엔터리로 변환해 저장, 조회함.
@@ -36,14 +34,18 @@ public class BoardService {
     @Autowired
     private final BoardLikeRepository likeRepository;
 
+    @Autowired
+    private final UserRepository userRepository;
+
     public Board save(Board board) {
         return boardRepository.save(board);
     }
 
-    public BoardService(BoardRepository boardRepository, BoardPictureRepository boardPictureRepository, BoardLikeRepository likeRepository) {
+    public BoardService(BoardRepository boardRepository, BoardPictureRepository boardPictureRepository, BoardLikeRepository likeRepository, UserRepository userRepository) {
         this.boardRepository = boardRepository;
         this.boardPictureRepository = boardPictureRepository;
         this.likeRepository = likeRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -86,21 +88,6 @@ public class BoardService {
         return response;
     }
 
-//    public Board getBoardById(Long id) {
-//        return boardRepository.findById(id).orElseThrow(() -> new RuntimeException("글을 찾을 수 없습니다."));
-//    }
-
-    // 글 수정
-//    @Transactional
-//    public Board updateBoard(Long id, BoardDto dto) {
-//        Board board = getBoardById(id);
-//        board.setTitle(dto.getTitle());
-//        board.setContent(dto.getContent());
-//        board.setUpdateTime(LocalDateTime.now());
-//
-//        return boardRepository.save(board);
-//    }
-
     // 글 조회
     @Transactional(readOnly = true)
     public List<BoardDto> getAllBoards() {
@@ -119,7 +106,8 @@ public class BoardService {
                             pictures,
                             b.getCreateTime(),
                             b.getUpdateTime(),
-                            b.getLikeCount()
+                            b.getLikeCount(),
+                            b.getSelectedDropdownOptions()
                     );
                 })
                 .collect(Collectors.toList());
@@ -142,7 +130,8 @@ public class BoardService {
                 pictures,
                 board.getCreateTime(),
                 board.getUpdateTime(),
-                board.getLikeCount()
+                board.getLikeCount(),
+                board.getSelectedDropdownOptions()
         );
     }
 
@@ -179,6 +168,11 @@ public class BoardService {
     @Transactional(readOnly = true)
     public Board findById(Long id) {
         return boardRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글이 없습니다"));
+    }
+
+    @Transactional
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     // 유저가 이미 좋아요 눌렀는지 확인(User-Board 매핑 필요)

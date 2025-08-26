@@ -41,7 +41,7 @@
 
 <div class="container" style="display: flex; gap: 20px;">
   <div class="justify-content-center mx-auto" style="width: 700px; margin-top: 100px">
-    <form th:action="@{/board/write}" method="post">
+    <form id="boardForm" th:action="@{/board/write}" method="post" enctype="multipart/form-data">
       <div class="mb-3">
         <label for="title" class="form-label">제목</label>
         <input type="text" class="form-control" id="title" name="title"

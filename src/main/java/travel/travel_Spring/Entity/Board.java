@@ -36,6 +36,9 @@ public class Board {
     @Column(name = "author", nullable = false)
     private String author;
 
+    @Column(name = "email", nullable = false)
+    private String email;
+
     @Column(name = "create_Time", nullable = false)
     private LocalDateTime createTime;
 
@@ -49,6 +52,10 @@ public class Board {
     @Column(name = "like_Count")
     @Min(0)
     private int likeCount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     // Board : BoardPicture = 1 : N
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)

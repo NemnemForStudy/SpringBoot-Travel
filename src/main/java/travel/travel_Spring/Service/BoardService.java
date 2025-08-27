@@ -54,6 +54,7 @@ public class BoardService {
         board.setTitle(dto.getTitle());
         board.setContent(dto.getContent());
         board.setAuthor(SecurityConfig.getCurrentNickname());
+        board.setEmail(dto.getEmail());
         board.setCreateTime(LocalDateTime.now());
         board.setUpdateTime(LocalDateTime.now());
         board.setViewCount(0);
@@ -79,7 +80,6 @@ public class BoardService {
             board.setBoardPictures(pictureEntities);
         }
 
-
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("message", "글이 성공적으로 등록되었습니다!");
@@ -103,6 +103,7 @@ public class BoardService {
                             b.getId(),
                             b.getTitle(),
                             b.getContent(),
+                            b.getEmail(),
                             pictures,
                             b.getCreateTime(),
                             b.getUpdateTime(),
@@ -127,6 +128,7 @@ public class BoardService {
                 board.getId(),
                 board.getTitle(),
                 board.getContent(),
+                board.getEmail(),
                 pictures,
                 board.getCreateTime(),
                 board.getUpdateTime(),
@@ -163,6 +165,14 @@ public class BoardService {
     @Transactional
     public void deleteBoard(Long id) {
         boardRepository.deleteById(id);
+    }
+
+    // 이메일 조회
+    @Transactional
+    public String getAuthorEmail(Long boardId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다. ID : " + boardId));
+        return board.getEmail();
     }
 
     @Transactional(readOnly = true)

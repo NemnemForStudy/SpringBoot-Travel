@@ -42,7 +42,8 @@ public class SecurityConfig {
             .authorizeRequests()
             // 로그인 여부와 상관없이 도메인에 진입할 수 있게 지정해줘야 함.
             // Image를 지정해줘야 로그인하지 않을 때도 이미지가 나오게 된다.
-            .antMatchers("/", "/loginView", "/css/**", "/js/**", "/index", "/joinMembership", "/Image/**", "/api/**").permitAll() // 이 부분 중요
+            // board를 추가해서 postman 할 수 있게 해줌.
+            .antMatchers("/", "/loginView", "/css/**", "/js/**", "/index", "/joinMembership", "/Image/**", "/api/**", "/board/**").permitAll() // 이 부분 중요
             .anyRequest().authenticated()
         .and()
             .formLogin()
@@ -83,5 +84,12 @@ public class SecurityConfig {
             return loginUserDetails.getNickname();
         }
         return null;
+    }
+
+    // 로그인 된 사용자 이메일 가져오기
+    public static String getCurrentEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        LoginUserDetails loginUserDetails = (LoginUserDetails) authentication.getPrincipal();
+        return loginUserDetails.getEmail();
     }
 }

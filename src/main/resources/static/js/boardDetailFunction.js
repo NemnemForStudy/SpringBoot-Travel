@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let likeCount = 0;
 
     const threeDotsBtn = document.getElementById("menuBtn");
+    const deleteBtn = document.getElementById("deleteBtn");
 
     // 서버에서 초기 상태 불러오기
     fetch(`/api/likes/${boardId}/status`)
@@ -58,5 +59,26 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => console.error("서버 저장 실패 : ", err));
     });
+
+    // 삭제 버튼
+    if(deleteBtn) {
+        deleteBtn.addEventListener("click", async (e) => {
+            e.stopPropagation(); // 삭제 버튼 클릭 시 카드 이벤트가 걸리지 않도록
+            if(!confirm("정말 삭제하시겠습니까?")) return;
+
+            try {
+                const response = await fetch(`/board/${boardId}`, {
+                    method : 'DELETE'
+                });
+
+                if(!response.ok) throw new Exception("삭제 실패");
+
+                alert("삭제되었습니다.");
+                window.location.href = "/travelDestination"; // 목록 페이지로 이동
+            } catch(err) {
+                alert("삭제에 실패했습니다.");
+            }
+        })
+    }
 });
 

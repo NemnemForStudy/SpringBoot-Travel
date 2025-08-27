@@ -2,20 +2,19 @@ package travel.travel_Spring.Controller.board;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import travel.travel_Spring.Controller.Config.SecurityConfig;
-import travel.travel_Spring.Controller.DTO.BoardCountDto;
 import travel.travel_Spring.Controller.DTO.BoardDto;
 import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.BoardPicture;
 import travel.travel_Spring.Service.BoardLikeService;
 import travel.travel_Spring.Service.BoardService;
 import travel.travel_Spring.Service.CardService;
+import travel.travel_Spring.UserDetails.LoginUserDetails;
 import travel.travel_Spring.repository.BoardPictureRepository;
 import travel.travel_Spring.repository.BoardRepository;
 
@@ -47,13 +46,14 @@ public class BoardApiController {
     public ResponseEntity<?> createBoard(
             @RequestParam String title,
             @RequestParam String content,
-            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
             @RequestParam(value = "selectedDropdownOptions", required = false) List<String> selectedDropdownOptions) throws IOException {
 
         Board board = new Board();
         board.setTitle(title);
         board.setContent(content);
         board.setAuthor(SecurityConfig.getCurrentNickname());
+        board.setEmail(SecurityConfig.getCurrentEmail());
         board.setCreateTime(LocalDateTime.now());
         board.setUpdateTime(LocalDateTime.now());
         board.setViewCount(0);
@@ -83,34 +83,12 @@ public class BoardApiController {
         return ResponseEntity.ok(Map.of("success", true, "boardId", board.getId(), "pictures", pictureUrls));
     }
 
-    // 게시글 리스트 조회
     @GetMapping("/travelDestination")
-    public ResponseEntity<Map<String, Object>> getTravelBoards(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createTime").descending());
-        Page<Board> boardPage = boardRepository.findAll(pageable);
-
-        List<BoardDto> boards = boardPage.stream()
-                .map(b -> new BoardDto(
-                        b.getId(),
-                        b.getTitle(),
-                        b.getContent(),
-                        b.getPictures().stream().map(BoardPicture::getPictureUrl).collect(Collectors.toList()),
-                        b.getCreateTime(),          // 필수! createTimeAgo 계산 위해
-                        b.getUpdateTime(),
-                        b.getLikeCount(),
-                        b.getSelectedDropdownOptions()
-                ))
-                .collect(Collectors.toList());
-
-
+    public ResponseEntity<Map<String, Object>> getAllBoards() {
+        List<BoardDto> boards = boardService.getAllBoards(); // 전체 게시글
         Map<String, Object> response = new HashMap<>();
         response.put("boards", boards);
-        response.put("currentPage", boardPage.getNumber());
-        response.put("totalPages", boardPage.getTotalPages());
-        response.put("totalElements", boardPage.getTotalElements());
-
+        response.put("totalCount", boards.size());
         return ResponseEntity.ok(response);
     }
 
@@ -183,5 +161,27 @@ public class BoardApiController {
             }
         }
         return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    @DeleteMapping("/{boardId}")
+    public ResponseEntity<Map<String, String>> deleteBoard(@PathVariable Long boardId,
+                                                           @AuthenticationPrincipal LoginUserDetails userDetails) {
+        Map<String, String> response = new HashMap<>();
+        Board board = boardService.findById(boardId);
+
+        if(board == null) {
+            response.put("message", "게시물이 존재하지 않습니다.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        // 작성자만 삭제 가능
+        if(!board.getEmail().equals(userDetails.getEmail())) {
+            response.put("message", "삭제 권한이 없습니다.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+
+        boardService.deleteBoard(boardId);
+        response.put("message", "삭제 성공");
+        return ResponseEntity.ok(response);
     }
 }

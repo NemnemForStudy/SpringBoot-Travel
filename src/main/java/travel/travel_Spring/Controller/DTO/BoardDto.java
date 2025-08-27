@@ -28,6 +28,7 @@ public class BoardDto {
     private String title;
     private String content;
     private String author;
+    private String email;
 
     @Min(0)
     private int viewCount;
@@ -54,6 +55,7 @@ public class BoardDto {
     public BoardDto(long id,
                     String title,
                     String content,
+                    String email,
                     List<String> pictures,
                     LocalDateTime createTime,
                     LocalDateTime updateTime,
@@ -62,6 +64,7 @@ public class BoardDto {
         this.id = id;
         this.title = title;
         this.content = content;
+        this.email = email;
         this.pictures = pictures;
         this.createTimeAgo = getTimeAgo(createTime);
         this.updateTime = updateTime;

@@ -1,14 +1,8 @@
+let currentUserEmail = "";
 document.addEventListener("DOMContentLoaded", () => {
     const boardId = document.body.dataset.boardId;
-    const likeContainer = document.querySelector(".mt-2");
     const likeCountSpan = document.getElementById("likeCount");
-
-    const likeBtn = document.createElement("i");
-    likeBtn.classList.add("bi"); // 기본 클래스만 넣기
-    likeBtn.style.color = "red";
-    likeBtn.style.cursor = "pointer";
-    likeBtn.style.fontSize = "1.5rem";
-    likeContainer.prepend(likeBtn);
+    const commentCountSpan = document.getElementById("commentCount");
 
     let liked = false;
     let likeCount = 0;
@@ -23,6 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
             liked = data.liked;
             likeCount = data.likeCount;
             likeCountSpan.textContent = likeCount;
+
+            commentCountSpan.textContent = data.commentCount;
             
             currentUserEmail = data.currentUserEmail;
             authorEmail = data.authorEmail;
@@ -80,5 +76,99 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         })
     }
-});
 
+    const submitBtn = document.getElementById("submitComment");
+    const commentArea = document.getElementById("comment");
+
+    if(submitBtn) {
+        submitBtn.addEventListener("click", (e) => {
+            e.preventDefault(); // 혹시 form submit 막기
+
+            const content = commentArea.value.trim();
+
+            if(content === "") {
+                alert("댓글을 입력해주세요!");
+                return;
+            } 
+
+            fetch(`/board/${boardId}/comment`, {
+                method : 'POST',
+                headers: { "Content-Type" : "application/json" },
+                body: JSON.stringify({
+                    boardId: boardId,
+                    content: content
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("댓글 등록에 성공했습니다.");
+                window.location.reload();
+            })
+            .catch(err => console.error("댓글 등록 실패", err));
+        });
+    }
+
+    const commentList = document.getElementById("commentList");
+
+    // 댓글 하나를 HTML로 만들어서 추가하는 함수
+    function addCommentToList(comment, currentUserEmail) {
+        debugger;
+        const div = document.createElement("div");
+        div.classList.add("border", "p-2", "mb-2", "rounded", "position-relative");
+    
+        let threeDotsHTML = '';
+        if(currentUserEmail === comment.email) {
+            threeDotsHTML = `
+                <div class="dropdown position-absolute" style="top:5px; right:5px;">
+                    <i class="bi bi-three-dots-vertical" id="commentMenuBtn${comment.id}" 
+                       style="cursor:pointer;" data-bs-toggle="dropdown"></i>
+                    <ul class="dropdown-menu" aria-labelledby="commentMenuBtn${comment.id}">
+                        <li><a class="dropdown-item edit-comment" href="#" data-id="${comment.id}">수정</a></li>
+                        <li><a class="dropdown-item delete-comment" href="#" data-id="${comment.id}">삭제</a></li>
+                    </ul>
+                </div>
+            `;
+        }
+    
+        div.innerHTML = `
+            <strong>${comment.author}</strong> 
+            <span class="text-muted" style="font-size:0.8rem;">${comment.createTimeAgo}</span>
+            <p>${comment.content}</p>
+            ${threeDotsHTML}
+        `;
+        commentList.prepend(div);
+    }
+
+    fetch(`/board/${boardId}/comments`)
+    .then(res => res.json())
+    .then(data => {
+        data.forEach(comment => addCommentToList(comment, currentUserEmail));
+    })
+    .catch(err => console.error("댓글 불러오기 실패", err));
+
+    document.addEventListener("click", async (e) => {
+        // 삭제 버튼 클릭 감지
+        if(e.target.classList.contains("delete-comment")) {
+            e.preventDefault();
+
+            const commentId = e.target.dataset.id;
+            if(!confirm("정말 삭제하시겠습니까?")) return;
+
+            try {
+                const resposne = await fetch(`/board/comment/${commentId}`, {
+                    method : "DELETE"
+                });
+
+                if(!resposne.ok) throw new Exception("삭제 실패");
+
+                alert("삭제되었습니다!");
+
+                const commentDiv = e.target.closest("div.border");
+                if(commentDiv) commentDiv.remove();
+                commentCountSpan.textContent = parseInt(commentCountSpan.textContent) - 1;
+            } catch(err) {
+                alert("댓글 삭제에 실패했습니다.");
+            }
+        } 
+    })
+});

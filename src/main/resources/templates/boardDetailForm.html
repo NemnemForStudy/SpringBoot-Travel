@@ -71,7 +71,6 @@
                     
                     <div class="container">
                         <section class="section" id="section-3">
-                            <h1>여행 경로</h1>
                             <div id="map" style="width: 70%; height: 300px; margin:auto"></div>
                             <code id="snippet" class="snippet"></code>
                         </section>
@@ -87,12 +86,25 @@
                         <p id="content"></p>
                     </div>
 
-                    <div class="mt-2"><span id="likeCount"></span></div>
-
+                    <div class="container d-flex align-items-center">
+                        <div class="mt-2 d-flex align-items-center">
+                            <i id="likeBtn" class="bi bi-heart" style="color:red; cursor:pointer; font-size:1.5rem;"></i>
+                            <span id="likeCount" style="margin-left: 5px;"></span>
+                        </div>
+                        <div class="ml-3 d-flex align-items-center">
+                            <i class="bi bi-chat-square" style="font-size:1.5rem; margin-top: 7px; margin-left: 10px;"></i>
+                            <span id="commentCount" style="margin-left: 5px; margin-top: 7px;"></span>
+                        </div>
+                    </div>
+                    
                     <div class="mt-4">
+                        <h5>댓글</h5>
+                        <div id="commentList" class="mb-3"></div>
                         <label for="comment" class="form-label">댓글 작성</label>
-                        <textarea class="form-control" id="comment" rows="3" placeholder="댓글을 입력하세요"></textarea>
-                        <button class="btn btn-primary mt-2">등록</button>
+                        <div class="input-group">
+                          <textarea class="form-control" id="comment" rows="3" placeholder="댓글을 입력하세요"></textarea>
+                          <button id="submitComment" class="btn btn-primary ms-2" style="cursor: pointer;">등록</button>
+                        </div>
                     </div>
                 </div>
             </div>

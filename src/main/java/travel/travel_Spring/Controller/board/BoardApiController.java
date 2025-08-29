@@ -9,16 +9,16 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import travel.travel_Spring.Controller.Config.SecurityConfig;
 import travel.travel_Spring.Controller.DTO.BoardDto;
+import travel.travel_Spring.Controller.DTO.CommentRequestDto;
+import travel.travel_Spring.Controller.DTO.CommentResponseDto;
 import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.BoardPicture;
-import travel.travel_Spring.Service.BoardLikeService;
+import travel.travel_Spring.Entity.Comment;
 import travel.travel_Spring.Service.BoardService;
-import travel.travel_Spring.Service.CardService;
+import travel.travel_Spring.Service.CommentService;
 import travel.travel_Spring.UserDetails.LoginUserDetails;
 import travel.travel_Spring.repository.BoardPictureRepository;
 import travel.travel_Spring.repository.BoardRepository;
-
-import org.springframework.data.domain.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,10 +36,9 @@ import java.util.stream.Collectors;
 public class BoardApiController {
 
     private final BoardService boardService;
-    private final CardService cardService;
     private final BoardRepository boardRepository;
     private final BoardPictureRepository boardPictureRepository;
-    private final BoardLikeService likeService;
+    private final CommentService commentService;
 
     // 글 작성 (POST 요청)
     @PostMapping("/write")
@@ -131,6 +130,7 @@ public class BoardApiController {
                                          @RequestParam String title,
                                          @RequestParam String content,
                                          @RequestParam(value="files", required = false) List<MultipartFile> files,
+                                         @RequestParam(value="deletedImages", required = false) List<String> deletedImages,
                                          @RequestParam(value="selectedDropdownOptions", required = false) List<String> selectedDropdownOptions
     ) throws IOException {
         Board board = boardRepository.findById(boardId).orElseThrow(() -> new RuntimeException("게시글이 없습니다."));
@@ -142,7 +142,6 @@ public class BoardApiController {
             board.setSelectedDropdownOptions(selectedDropdownOptions);
         }
         board.setUpdateTime(LocalDateTime.now());
-        boardRepository.save(board);
 
         // 새로 업로드 된 파일 처리
         if(files != null && !files.isEmpty()) {
@@ -160,6 +159,20 @@ public class BoardApiController {
                 }
             }
         }
+
+        // List<BoardPicture> 에서 제거할 때는 BoardPicture 객체 자체 제거해야함.
+        List<BoardPicture> pictures = board.getPictures();
+        for(String deleteImage : deletedImages) {
+            Iterator<BoardPicture> iter = pictures.iterator();
+            while (iter.hasNext()) {
+                BoardPicture picture = iter.next();
+                if(deleteImage.equals(picture.getPictureUrl())) {
+                    iter.remove();
+                }
+            }
+        }
+        boardRepository.save(board);
+
         return ResponseEntity.ok(Map.of("success", true));
     }
 
@@ -183,5 +196,56 @@ public class BoardApiController {
         boardService.deleteBoard(boardId);
         response.put("message", "삭제 성공");
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{boardId}/comment")
+    public ResponseEntity<?> addComment(@PathVariable Long boardId,
+                                        @RequestBody CommentRequestDto request,
+                                        @AuthenticationPrincipal LoginUserDetails userDetails) {
+        if(request.getContent().isEmpty() || request.getContent().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "댓글을 입력해주세요"));
+        }
+
+        Comment comment = commentService.addComment(boardId, userDetails.getEmail(), request.getContent());
+
+        return ResponseEntity.ok(Map.of(
+                "id", comment.getCommentId(),
+                "author", comment.getAuthor(),
+                "email", comment.getEmail(),
+                "content", comment.getContent(),
+                "createTime", comment.getCreateTime()
+        ));
+    }
+
+    // 댓글 리스트
+    @GetMapping("/{boardId}/comments")
+    public ResponseEntity<List<CommentResponseDto>> showCommentList(@PathVariable Long boardId, @AuthenticationPrincipal LoginUserDetails userDetails) {
+        List<Comment> comments = commentService.getCommentByBoardId(boardId);
+        String currentEmail = userDetails.getEmail();
+
+        // Comment -> CommentResponseDto 변환
+        List<CommentResponseDto> response = comments.stream()
+                .map(c -> new CommentResponseDto(c, currentEmail))
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    // 댓글 삭제
+    @DeleteMapping("/comment/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable Long commentId,
+                                         @AuthenticationPrincipal LoginUserDetails userDetails) {
+        // 댓글 가져오기
+        Comment comment = commentService.getCommentById(commentId);
+
+        // 현재 사용자와 작성자 비교
+        if(!comment.getEmail().equals(userDetails.getEmail())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("권한이 없습니다.");
+        }
+
+        // 댓글 삭제
+        commentService.deleteComment(commentId);
+        return ResponseEntity.ok("삭제 성공");
     }
 }

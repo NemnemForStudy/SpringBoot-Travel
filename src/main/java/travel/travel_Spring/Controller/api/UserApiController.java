@@ -7,12 +7,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import travel.travel_Spring.Controller.DTO.*;
+import travel.travel_Spring.Entity.User;
 import travel.travel_Spring.Service.EmailService;
 import travel.travel_Spring.Service.LoginService;
 import travel.travel_Spring.Service.UserService;
@@ -23,6 +27,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpSession;
 import java.io.File;
+import java.security.Principal;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -242,20 +247,26 @@ public class UserApiController {
     }
 
     @PostMapping("/updateNickname")
-    public ResponseEntity<Map<String, Object>> updateNickname(@RequestBody NicknameDto dto, @AuthenticationPrincipal LoginUserDetails userDetails, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> updateNickname(@RequestBody Map<String, String> request, @AuthenticationPrincipal LoginUserDetails userDetails, HttpSession session) {
         Map<String, Object> response = new HashMap<>();
+
         try {
+            String newNickname = request.get("nickname");
+            Long userId = userDetails.getUser().getId();
             // 사용자 DB 업데이트(DB)
-            userService.updateNickname(userDetails.getUsername(), dto.getNickname());
-
+            userService.updateNicknameAndBoards(userId, newNickname);
             // 세션에 있는 사용자 정보 갱신
-            userDetails.getUser().setNickname(dto.getNickname());
-            // 세션 갱신
-            session.setAttribute("userDetails", userDetails);
+            userDetails.getUser().setNickname(newNickname);
 
-            response.put("success", true);
-            response.put("nickname", dto.getNickname());
-            return ResponseEntity.ok(response);
+            // 세션 갱신 (이렇게 해야 Spring Security가 참조하는 인증 정보도 최신 상태로 갱신되어 새 닉네임이 보임)
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    userDetails.getPassword(),
+                    userDetails.getAuthorities()
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            return ResponseEntity.ok(Map.of("success", true, "nickname", newNickname));
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
@@ -267,13 +278,17 @@ public class UserApiController {
     @GetMapping("/getUserNickname")
     public ResponseEntity<Map<String, Object>> getUserNickname(@AuthenticationPrincipal LoginUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
+
         try {
+            String email = userDetails.getEmail();
+            User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("사용자 없음"));
+            String nickname = user.getNickname();
+
             HttpHeaders headers = new HttpHeaders();
             headers.add("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
             headers.add("Pragma", "no-cache");
             headers.add("Expires", "0");
 
-            String nickname = userDetails.getNickname();  // LoginUserDetails에서 닉네임 가져오기
             response.put("success", true);
             response.put("nickname", nickname);
             return ResponseEntity.ok().headers(headers).body(response);

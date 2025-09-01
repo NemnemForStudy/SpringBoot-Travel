@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import travel.travel_Spring.Controller.Config.SecurityConfig;
 import travel.travel_Spring.Controller.DTO.BoardDto;
+import travel.travel_Spring.Controller.DTO.BoardPictureDto;
 import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.BoardPicture;
 import travel.travel_Spring.Entity.User;
@@ -99,6 +100,11 @@ public class BoardService {
                     List<String> pictures = b.getBoardPictures().stream()
                             .map(BoardPicture::getPictureUrl)
                             .collect(Collectors.toList());
+
+                    List<BoardPictureDto> pictureDtos = b.getBoardPictures().stream()
+                            .map(BoardPictureDto::new)
+                            .collect(Collectors.toList());
+
                     return new BoardDto(
                             b.getId(),
                             b.getTitle(),
@@ -108,7 +114,8 @@ public class BoardService {
                             b.getCreateTime(),
                             b.getUpdateTime(),
                             b.getLikeCount(),
-                            b.getSelectedDropdownOptions()
+                            b.getSelectedDropdownOptions(),
+                            pictureDtos
                     );
                 })
                 .collect(Collectors.toList());
@@ -124,6 +131,10 @@ public class BoardService {
                 .map(BoardPicture::getPictureUrl)
                 .collect(Collectors.toList());
 
+        List<BoardPictureDto> pictureDtos = board.getBoardPictures().stream()
+                .map(BoardPictureDto::new)
+                .collect(Collectors.toList());
+
         return new BoardDto(
                 board.getId(),
                 board.getTitle(),
@@ -133,7 +144,8 @@ public class BoardService {
                 board.getCreateTime(),
                 board.getUpdateTime(),
                 board.getLikeCount(),
-                board.getSelectedDropdownOptions()
+                board.getSelectedDropdownOptions(),
+                pictureDtos
         );
     }
 
@@ -176,8 +188,9 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public Board findById(Long id) {
-        return boardRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글이 없습니다"));
+    public Board findById(Long boardId) {
+        return boardRepository.findById(boardId)
+                .orElseThrow(() -> new RuntimeException("게시글 없음"));
     }
 
     @Transactional
@@ -189,5 +202,16 @@ public class BoardService {
     @Transactional(readOnly = true)
     public boolean hasUserLiked(Long boardId, String email) {
         return likeRepository.existsByBoardIdAndUserEmail(boardId, email);
+    }
+
+    public BoardDto getBoardWithCoordinates(Long boardId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new RuntimeException("게시글 없음"));
+
+        List<BoardPictureDto> pictureDtos = board.getBoardPictures().stream()
+                .map(BoardPictureDto::new)
+                .collect(Collectors.toList());
+
+        return new BoardDto(board.getId(), board.getTitle(), pictureDtos);
     }
 }

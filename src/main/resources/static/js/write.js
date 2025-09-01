@@ -3,6 +3,7 @@ const fileInput = document.getElementById("formFileMultiple");
 const fileSelectBtn = document.getElementById("fileSelectBtn");
 const preview = document.getElementById("preview");
 const fileDisplay = document.getElementById("fileDisplay");
+const form = document.getElementById("boardForm");
 
 let selectedFiles = [];       // 새로 선택한 파일
 let existingImages = [];      // 서버에서 불러온 기존 이미지
@@ -44,18 +45,62 @@ fileSelectBtn.addEventListener("click", () => fileInput.click());
 // ===== 파일 선택 처리 =====
 fileInput.addEventListener("change", function(event) {
     selectedFiles = Array.from(event.target.files);
+    selectedFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = function() {
+                EXIF.getData(img, function() {
+                    const lat = EXIF.getTag(this, "GPSLatitude");
+                    const lon = EXIF.getTag(this, "GPSLongitude");
+                    const latRef = EXIF.getTag(this, "GPSLatitudeRef") || "N";
+                    const lonRef = EXIF.getTag(this, "GPSLongitudeRef") || "E";
+
+                    if(lat && lon) {
+                        const latitude = convertDMSToDD(lat[0], lat[1], lat[2], latRef);
+                        const longitude = convertDMSToDD(lon[0], lon[1], lon[2], lonRef);
+                        console.log("추출된 위치 : ", latitude, longitude);
+
+                        // 사진별 hidden input 동적 생성
+                        const latInput = document.createElement("input");
+                        latInput.type = "hidden";
+                        latInput.name = "latitude";
+                        latInput.value = latitude;
+                        latInput.dataset.fileName = file.name;
+                        form.appendChild(latInput);
+
+                        const lngInput = document.createElement("input");
+                        lngInput.type = "hidden";
+                        lngInput.name = "longitude";
+                        lngInput.value = longitude;
+                        lngInput.dataset.fileName = file.name;
+                        form.appendChild(lngInput);
+                    } else {
+                        console.log("위치 정보 없음");
+                    }
+                });
+            };
+        };
+        reader.readAsDataURL(file);
+    });
+
     updatePreview();
     updateFileDisplay();
 });
+
+// ===== 위도, 경도 변환 함수 =====
+function convertDMSToDD(degress, minutes, seconds, direction) {
+    let dd = degress + minutes / 60 + seconds / 3600;
+    if(direction === "S" || direction === "W") dd = dd * -1;
+    return dd;
+}
 
 // ===== 이미지 미리보기 =====
 function updatePreview() {
     preview.innerHTML = "";
 
-    // 기존 이미지 렌더링
     existingImages.forEach(url => appendImage(url, true));
-
-    // 새로 선택한 파일 렌더링
     selectedFiles.forEach(file => {
         const reader = new FileReader();
         reader.onload = e => appendImage(e.target.result, false, file);
@@ -100,6 +145,9 @@ function appendImage(src, isExisting, fileObj = null) {
             existingImages = existingImages.filter(url => url !== src);
         } else if(fileObj) {
             selectedFiles = selectedFiles.filter(f => f !== fileObj);
+            // 삭제 시 hidden input 제거
+            const inputs = form.querySelectorAll(`input[data-file-name="${fileObj.name}"]`);
+            inputs.forEach(input => input.remove());
         }
         updateFileDisplay();
     });
@@ -187,16 +235,14 @@ function removeAllDropdowns() {
 }
 
 // ===== 폼 제출 처리 =====
-const form = document.querySelector("form");
 form.addEventListener("submit", function(event) {
     event.preventDefault();
+    const formData = new FormData(form);
 
     if(selectedDropdownOptions.some(val => val === null)) {
         alert("모든 드롭다운 옵션을 선택해주세요.");
         return;
     }
-
-    const formData = new FormData(form);
 
     selectedFiles.forEach(file => formData.append("files", file));
     deletedImages.forEach(url => formData.append("deletedImages", url));

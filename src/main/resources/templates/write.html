@@ -66,6 +66,9 @@
       <!-- 숨겨진 파일 업로드 input -->
       <input type="file" id="profileUpload" accept="image/*" style="display: none;" />
 
+      <!-- 사진 경도, 위도 (위치) 저장용 -->
+      <input type="hidden" name="latitude" id="latitude" />
+      <input type="hidden" name="longitude" id="longitude" />
       <div class="d-flex justify-content-end">
         <button id="saveBtn" class="btn btn-primary" type="submit">등록</button>
       </div>
@@ -85,6 +88,8 @@
 
 <script src="/js/write.js"></script>
 <!-- <script src="/js/imgInputFunction.js"></script> -->
+<!-- exif-js CDN 사진 위도, 경도 얻기 위해 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

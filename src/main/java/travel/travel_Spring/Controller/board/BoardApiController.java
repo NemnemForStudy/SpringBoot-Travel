@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import travel.travel_Spring.Controller.Config.SecurityConfig;
 import travel.travel_Spring.Controller.DTO.BoardDto;
+import travel.travel_Spring.Controller.DTO.BoardPictureDto;
 import travel.travel_Spring.Controller.DTO.CommentRequestDto;
 import travel.travel_Spring.Controller.DTO.CommentResponseDto;
 import travel.travel_Spring.Entity.Board;
@@ -46,8 +47,12 @@ public class BoardApiController {
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "latitude") List<String> latitudes,
+            @RequestParam(value = "longitude") List<String> longitudes,
             @RequestParam(value = "selectedDropdownOptions", required = false) List<String> selectedDropdownOptions) throws IOException {
 
+        System.out.println(latitudes);
+        System.out.println(longitudes);
         Board board = new Board();
         board.setTitle(title);
         board.setContent(content);
@@ -58,13 +63,17 @@ public class BoardApiController {
         board.setViewCount(0);
         board.setLikeCount(0);
         board.setSelectedDropdownOptions(selectedDropdownOptions);
+
         boardRepository.save(board);
 
         List<String> pictureUrls = new ArrayList<>();
         if (files != null && !files.isEmpty()) {
-            for (MultipartFile file : files) {
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile file = files.get(i);
+
                 if (!file.isEmpty()) {
                     String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                    System.out.println(filename);
                     Path filepath = Paths.get("uploads", filename);
                     Files.createDirectories(filepath.getParent()); // 폴더 없으면 생성
                     file.transferTo(filepath); // 서버에 저장
@@ -72,8 +81,14 @@ public class BoardApiController {
                     BoardPicture boardPicture = new BoardPicture();
                     boardPicture.setBoard(board);
                     boardPicture.setPictureUrl("/uploads/" + filename); // DB에는 URL만 지정
-                    boardPictureRepository.save(boardPicture);
 
+                    // 파일 순서와 동일한 Lat,Lng매핑
+                    if (latitudes != null && longitudes != null && i < latitudes.size()) {
+                        boardPicture.setLatitude(Double.parseDouble(latitudes.get(i)));
+                        boardPicture.setLongitude(Double.parseDouble(longitudes.get(i)));
+                    }
+
+                    boardPictureRepository.save(boardPicture);
                     pictureUrls.add("/uploads/" + filename);
                 }
             }
@@ -107,19 +122,30 @@ public class BoardApiController {
         Board board = boardService.findById(boardId);
         boolean likedByUser = boardService.hasUserLiked(boardId, principal.getName());
 
-        BoardDto boardDto = new BoardDto();
-        boardDto.setId(board.getId());
-        boardDto.setTitle(board.getTitle());
-        boardDto.setContent(board.getContent());
-        boardDto.setLikeCount(board.getLikeCount());
-        boardDto.setLikedByCurrentUser(likedByUser);
-        boardDto.setSelectedDropdownOptions(board.getSelectedDropdownOptions());
+        // 사진 + 좌표 포함
+        List<BoardPictureDto> pictureDtos = board.getBoardPictures().stream()
+                .map(BoardPictureDto::new)
+                .collect(Collectors.toList());
 
         // 사진 URL 리스트 세팅
-        List<String> pictureUrls = board.getPictures().stream()
+        List<String> pictureUrls = board.getBoardPictures().stream()
                 .map(BoardPicture::getPictureUrl)
                 .collect(Collectors.toList());
-        boardDto.setPictures(pictureUrls);
+
+        BoardDto boardDto = new BoardDto(
+                board.getId(),
+                board.getTitle(),
+                board.getContent(),
+                board.getEmail(),
+                pictureUrls,
+                board.getCreateTime(),
+                board.getUpdateTime(),
+                board.getLikeCount(),
+                board.getSelectedDropdownOptions(),
+                pictureDtos
+        );
+
+        boardDto.setLikedByCurrentUser(likedByUser);
 
         return ResponseEntity.ok(boardDto);
     }

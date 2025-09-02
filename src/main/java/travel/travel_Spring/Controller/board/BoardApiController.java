@@ -47,12 +47,13 @@ public class BoardApiController {
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
-            @RequestParam(value = "latitude") List<String> latitudes,
-            @RequestParam(value = "longitude") List<String> longitudes,
+            @RequestParam(value = "latitude", required = false) List<String> latitudes,
+            @RequestParam(value = "longitude", required = false) List<String> longitudes,
             @RequestParam(value = "selectedDropdownOptions", required = false) List<String> selectedDropdownOptions) throws IOException {
 
-        System.out.println(latitudes);
-        System.out.println(longitudes);
+        if(title.isEmpty() || title == null) {
+            return ResponseEntity.badRequest().body("에러");
+        }
         Board board = new Board();
         board.setTitle(title);
         board.setContent(content);
@@ -124,7 +125,7 @@ public class BoardApiController {
 
         // 사진 + 좌표 포함
         List<BoardPictureDto> pictureDtos = board.getBoardPictures().stream()
-                .map(BoardPictureDto::new)
+                .map(bp -> new BoardPictureDto(bp.getLatitude(), bp.getLongitude()))
                 .collect(Collectors.toList());
 
         // 사진 URL 리스트 세팅

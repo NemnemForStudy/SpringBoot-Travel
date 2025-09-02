@@ -60,7 +60,9 @@ fileInput.addEventListener("change", function(event) {
                     if(lat && lon) {
                         const latitude = convertDMSToDD(lat[0], lat[1], lat[2], latRef);
                         const longitude = convertDMSToDD(lon[0], lon[1], lon[2], lonRef);
-                        console.log("추출된 위치 : ", latitude, longitude);
+                        
+                        // 기존 hidden input 제거 (같은 파일일 경우 중복 방지)
+                        document.querySelectorAll(`input[data-file-name="${file.name}"]`).forEach(el => el.remove());
 
                         // 사진별 hidden input 동적 생성
                         const latInput = document.createElement("input");
@@ -238,6 +240,8 @@ function removeAllDropdowns() {
 form.addEventListener("submit", function(event) {
     event.preventDefault();
     const formData = new FormData(form);
+
+    console.log(formData);
 
     if(selectedDropdownOptions.some(val => val === null)) {
         alert("모든 드롭다운 옵션을 선택해주세요.");

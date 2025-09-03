@@ -3,6 +3,7 @@ package travel.travel_Spring.Impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import travel.travel_Spring.Controller.DTO.CommentResponseDto;
 import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.Comment;
 import travel.travel_Spring.Entity.User;
@@ -12,6 +13,7 @@ import travel.travel_Spring.repository.CommentRepository;
 import travel.travel_Spring.repository.UserRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,12 +43,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Transactional
-    public long getCommentCount(Long boardId) {
-        Board board = boardRepository.findById(boardId).orElseThrow();
-        return commentRepository.countByBoardId(boardId);
-    }
-
-    @Transactional
     public List<Comment> getCommentByBoardId(Long boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("게시글이 없습니다."));
@@ -63,4 +59,29 @@ public class CommentServiceImpl implements CommentService {
     public void deleteComment(Long commentId) {
         commentRepository.deleteById(commentId);
     }
+
+    @Override
+    public long getCommentCount(Long boardId) {
+        return commentRepository.countByBoardId(boardId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommentResponseDto> getCommentsDtoByBoardId(Long boardId, String currentUserEmail) {
+        return getCommentByBoardId(boardId)
+                .stream()
+                .map(comment -> new CommentResponseDto(comment, currentUserEmail))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CommentResponseDto updateComment(Long commentId, String newContent) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+        comment.setContent(newContent);
+        commentRepository.save(comment);
+
+        String currentUserEmail = comment.getEmail();
+        return new CommentResponseDto(comment, currentUserEmail);
+    }
+
 }

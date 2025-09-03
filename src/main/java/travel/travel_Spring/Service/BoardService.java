@@ -8,9 +8,11 @@ import org.springframework.transaction.annotation.Transactional;
 import travel.travel_Spring.Controller.Config.SecurityConfig;
 import travel.travel_Spring.Controller.DTO.BoardDto;
 import travel.travel_Spring.Controller.DTO.BoardPictureDto;
+import travel.travel_Spring.Controller.DTO.CommentResponseDto;
 import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.BoardPicture;
 import travel.travel_Spring.Entity.User;
+import travel.travel_Spring.Impl.CommentServiceImpl;
 import travel.travel_Spring.repository.BoardLikeRepository;
 import travel.travel_Spring.repository.BoardPictureRepository;
 import travel.travel_Spring.repository.BoardRepository;
@@ -38,15 +40,19 @@ public class BoardService {
     @Autowired
     private final UserRepository userRepository;
 
+    @Autowired
+    private final CommentServiceImpl commentService;
+
     public Board save(Board board) {
         return boardRepository.save(board);
     }
 
-    public BoardService(BoardRepository boardRepository, BoardPictureRepository boardPictureRepository, BoardLikeRepository likeRepository, UserRepository userRepository) {
+    public BoardService(BoardRepository boardRepository, BoardPictureRepository boardPictureRepository, BoardLikeRepository likeRepository, UserRepository userRepository, CommentServiceImpl commentService) {
         this.boardRepository = boardRepository;
         this.boardPictureRepository = boardPictureRepository;
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
+        this.commentService = commentService;
     }
 
     @Transactional
@@ -91,7 +97,7 @@ public class BoardService {
 
     // 글 조회
     @Transactional(readOnly = true)
-    public List<BoardDto> getAllBoards() {
+    public List<BoardDto> getAllBoards(String currentUserEmail) {
         // 게시글 최신순으로 보여줌.
         List<Board> boards = boardRepository.findAll(Sort.by(Sort.Direction.DESC, "createTime"));
 
@@ -105,6 +111,10 @@ public class BoardService {
                             .map(BoardPictureDto::new)
                             .collect(Collectors.toList());
 
+                    List<CommentResponseDto> comments = commentService.getCommentByBoardId(b.getId()).stream()
+                            .map(c -> new CommentResponseDto(c, currentUserEmail))  // Comment 객체 전체와 현재 로그인 유저 이메일 전달
+                            .collect(Collectors.toList());
+
                     return new BoardDto(
                             b.getId(),
                             b.getTitle(),
@@ -115,7 +125,8 @@ public class BoardService {
                             b.getUpdateTime(),
                             b.getLikeCount(),
                             b.getSelectedDropdownOptions(),
-                            pictureDtos
+                            pictureDtos,
+                            comments
                     );
                 })
                 .collect(Collectors.toList());
@@ -123,7 +134,7 @@ public class BoardService {
 
     // 단일 게시글 조회 메서드
     @Transactional(readOnly = true)
-    public BoardDto getBoardById(Long id) {
+    public BoardDto getBoardById(Long id, String currentUserEmail) {
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("게시글이 없습니다."));
 
@@ -133,6 +144,10 @@ public class BoardService {
 
         List<BoardPictureDto> pictureDtos = board.getBoardPictures().stream()
                 .map(BoardPictureDto::new)
+                .collect(Collectors.toList());
+
+        List<CommentResponseDto> comments = commentService.getCommentByBoardId(id).stream()
+                .map(comment -> new CommentResponseDto(comment, currentUserEmail))
                 .collect(Collectors.toList());
 
         return new BoardDto(
@@ -145,7 +160,8 @@ public class BoardService {
                 board.getUpdateTime(),
                 board.getLikeCount(),
                 board.getSelectedDropdownOptions(),
-                pictureDtos
+                pictureDtos,
+                comments
         );
     }
 
@@ -204,14 +220,16 @@ public class BoardService {
         return likeRepository.existsByBoardIdAndUserEmail(boardId, email);
     }
 
-    public BoardDto getBoardWithCoordinates(Long boardId) {
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("게시글 없음"));
-
-        List<BoardPictureDto> pictureDtos = board.getBoardPictures().stream()
-                .map(BoardPictureDto::new)
-                .collect(Collectors.toList());
-
-        return new BoardDto(board.getId(), board.getTitle(), pictureDtos);
-    }
+//    public BoardDto getBoardWithCoordinates(Long boardId) {
+//        Board board = boardRepository.findById(boardId)
+//                .orElseThrow(() -> new RuntimeException("게시글 없음"));
+//
+//        List<BoardPictureDto> pictureDtos = board.getBoardPictures().stream()
+//                .map(BoardPictureDto::new)
+//                .collect(Collectors.toList());
+//
+//        List<CommentResponseDto> comment = commentService.getCommentById(boardId)
+//
+//        return new BoardDto(board.getId(), board.getTitle(), pictureDtos);
+//    }
 }

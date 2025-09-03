@@ -15,6 +15,8 @@ public class BoardPicture {
     private Long id;
     private Double latitude;
     private Double longitude;
+    private String filename;
+    private Integer orderIndex;
     private String pictureUrl; // 실제 이미지 경로
 
     @ManyToOne(fetch = FetchType.LAZY)

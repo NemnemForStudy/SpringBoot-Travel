@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import travel.travel_Spring.Entity.BoardPicture;
+import travel.travel_Spring.Entity.Comment;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -54,6 +55,10 @@ public class BoardDto {
     private List<String> selectedDropdownOptions = new ArrayList<>();
 
     private List<BoardPictureDto> pictureDtos = new ArrayList<>();
+
+    private long commentCount;
+    private List<CommentResponseDto> commentList = new ArrayList<>();
+
     public BoardDto(long id,
                     String title,
                     String content,
@@ -63,7 +68,8 @@ public class BoardDto {
                     LocalDateTime updateTime,
                     int likeCount,
                     List<String> selectedDropdownOptions,
-                    List<BoardPictureDto> pictureDtos) {
+                    List<BoardPictureDto> pictureDtos,
+                    List<CommentResponseDto> commentList) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -74,12 +80,14 @@ public class BoardDto {
         this.likeCount = likeCount;
         this.selectedDropdownOptions = selectedDropdownOptions;
         this.pictureDtos = pictureDtos;
+        this.commentList = commentList;
     }
 
-    public BoardDto(Long id, String title, List<BoardPictureDto> pictureDtos) {
+    public BoardDto(Long id, String title, List<BoardPictureDto> pictureDtos, List<CommentResponseDto> commentList) {
         this.id = id;
         this.title = title;
         this.pictureDtos = pictureDtos;
+        this.commentList = commentList;
     }
 
     private String getTimeAgo(LocalDateTime createTime) {

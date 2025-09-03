@@ -33,25 +33,4 @@ public class BoardLikeController {
 
         return ResponseEntity.ok(Map.of("liked", liked, "likeCount", count));
     }
-
-    @GetMapping("/{boardId}/status")
-    public ResponseEntity<Map<String, Object>> likeAndCommentAndEmailStatus(@PathVariable Long boardId, @AuthenticationPrincipal UserDetails userDetails) {
-        String currentUserEmail = userDetails.getUsername();
-
-        Board board = boardService.findById(boardId);
-        String authorNickname = board.getAuthor();
-        String authorEmail = userService.getEmailByNickname(authorNickname);
-
-        boolean liked = likeService.hasUserLiked(boardId, currentUserEmail);
-        long likeCount = likeService.getLikeCount(boardId);
-        long commentCount = commentService.getCommentCount(boardId);
-
-        return ResponseEntity.ok(Map.of(
-                "liked", liked,
-                "likeCount", likeCount,
-                "commentCount", commentCount,
-                "currentUserEmail", currentUserEmail,
-                "authorEmail", authorEmail
-        ));
-    }
 }

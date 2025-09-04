@@ -12,6 +12,7 @@ let selectedDropdownOptions = []; // 드롭다운 선택 값
 
 // ===== DOMContentLoaded: 수정 모드 처리 =====
 document.addEventListener("DOMContentLoaded", async () => {
+    debugger;
     const urlParams = new URLSearchParams(window.location.search);
     const boardId = urlParams.get("boardId");
     const titleInput = document.getElementById("title");
@@ -179,6 +180,7 @@ function updateFileDisplay() {
 function createExtraMultiDropdowns(count, preSelected = []) {
     removeAllDropdowns();
     selectedDropdownOptions = [];
+    debugger;
 
     const container = document.createElement("div");
     container.id = "dropdownContainer";
@@ -241,7 +243,10 @@ form.addEventListener("submit", function(event) {
     event.preventDefault();
     const formData = new FormData(form);
 
-    console.log(formData);
+    formData.forEach((value, key) => {
+        console.log(key, value);
+    });
+    debugger;
 
     if(selectedDropdownOptions.some(val => val === null)) {
         alert("모든 드롭다운 옵션을 선택해주세요.");
@@ -250,8 +255,8 @@ form.addEventListener("submit", function(event) {
 
     selectedFiles.forEach(file => formData.append("files", file));
     deletedImages.forEach(url => formData.append("deletedImages", url));
-    selectedDropdownOptions.forEach((val, idx) => {
-        formData.append(`selectedDropdownOptions[${idx}]`, val);
+    selectedDropdownOptions.forEach(val => {
+        formData.append("selectedDropdownOptions", val);
     });
 
     const urlParams = new URLSearchParams(window.location.search);

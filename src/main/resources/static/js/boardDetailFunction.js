@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const commentList = document.getElementById("commentList");
     const photoContainer = document.getElementById("photo-container");
     const photo = document.getElementById("photo");
+    const travelTimeDisplay = document.getElementById("travelTime"); // 사진 아래에 시간 표시용 div
 
     let currentUserEmail = "";
     let liked = false;
@@ -17,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let authorEmail = "";
 
     // ---------------------------
-    // 초기 상태 불러오기 (status → comments 순서 보장)
+    // 초기 상태 불러오기
     // ---------------------------
     try {
         const statusRes = await fetch(`/board/api/board/${boardId}/status`);
@@ -30,17 +31,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         likeCountSpan.textContent = likeCount;
         commentCountSpan.textContent = statusData.commentCount;
 
-        // 하트 상태 초기화
         likeBtn.classList.remove("bi-heart", "bi-heart-fill");
         likeBtn.classList.add(liked ? "bi-heart-fill" : "bi-heart");
-
-        // 게시글 작성자만 메뉴 보이기
         threeDotsBtn.style.display = currentUserEmail === authorEmail ? 'block' : 'none';
 
-        // 댓글 불러오기
         const commentRes = await fetch(`/board/api/board/${boardId}/comments`);
         const comments = await commentRes.json();
-
         commentList.innerHTML = "";
         if (Array.isArray(comments)) {
             comments.forEach(comment => addCommentToList(comment, currentUserEmail));
@@ -93,7 +89,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             e.preventDefault();
             const content = commentArea.value.trim();
             if (!content) return alert("댓글을 입력해주세요!");
-
             try {
                 const res = await fetch(`/board/${boardId}/comment`, {
                     method: "POST",
@@ -101,7 +96,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     body: JSON.stringify({ boardId, content })
                 });
                 const comment = await res.json();
-
                 addCommentToList(comment, currentUserEmail);
                 commentArea.value = "";
                 commentCountSpan.textContent = parseInt(commentCountSpan.textContent) + 1;
@@ -112,7 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // ---------------------------
-    // 댓글 렌더링
+    // 댓글 렌더링 함수
     // ---------------------------
     function addCommentToList(comment, currentUserEmail) {
         const div = document.createElement("div");
@@ -142,39 +136,76 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // ---------------------------
-    // 댓글 삭제 이벤트 (위임)
+    // 댓글 수정/삭제 이벤트 위임
     // ---------------------------
     document.addEventListener("click", async (e) => {
+        const commentDiv = e.target.closest("div.border");
+        if (!commentDiv) return;
+
+        // 삭제
         if (e.target.classList.contains("delete-comment")) {
             e.preventDefault();
             const commentId = e.target.dataset.id;
             if (!confirm("정말 삭제하시겠습니까?")) return;
-
             try {
                 const response = await fetch(`/board/comment/${commentId}`, { method: "DELETE" });
                 if (!response.ok) throw new Error("삭제 실패");
-
-                const commentDiv = e.target.closest("div.border");
-                if (commentDiv) commentDiv.remove();
+                commentDiv.remove();
                 commentCountSpan.textContent = parseInt(commentCountSpan.textContent) - 1;
             } catch (err) {
                 alert("댓글 삭제에 실패했습니다.");
             }
         }
+
+        // 수정
+        if (e.target.classList.contains("edit-comment")) {
+            e.preventDefault();
+            const contentP = commentDiv.querySelector("p");
+            if (commentDiv.querySelector("textarea")) return;
+            const originalContent = contentP.textContent;
+            contentP.innerHTML = `
+                <textarea class="form-control mb-2 edit-textarea">${originalContent}</textarea>
+                <button class="btn btn-sm btn-success save-edit" data-id="${e.target.dataset.id}">저장</button>
+                <button class="btn btn-sm btn-secondary cancel-edit" data-id="${e.target.dataset.id}">취소</button>
+            `;
+        }
+
+        // 저장
+        if (e.target.classList.contains("save-edit")) {
+            e.preventDefault();
+            const textarea = commentDiv.querySelector(".edit-textarea");
+            const newContent = textarea.value.trim();
+            if (!newContent) return alert("내용을 입력하세요!");
+            try {
+                const res = await fetch(`/board/comment/${e.target.dataset.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content: newContent })
+                });
+                if (!res.ok) throw new Error("수정 실패");
+                commentDiv.querySelector("p").innerHTML = newContent;
+            } catch (err) {
+                alert("댓글 수정에 실패했습니다.");
+            }
+        }
+
+        // 취소
+        if (e.target.classList.contains("cancel-edit")) {
+            e.preventDefault();
+            const textarea = commentDiv.querySelector(".edit-textarea");
+            commentDiv.querySelector("p").innerHTML = textarea ? textarea.value : "";
+        }
     });
 
     // ---------------------------
-    // 지도 및 마커 + 경로
+    // 지도 초기화
     // ---------------------------
-    try {
-        const res = await fetch(`/board/api/board/${boardId}`);
-        const board = await res.json();
-
+    async function initMap(board) {
         if (!board.pictureDtos || board.pictureDtos.length === 0) return;
 
         const map = new naver.maps.Map("map", {
             center: new naver.maps.LatLng(board.pictureDtos[0].latitude, board.pictureDtos[0].longitude),
-            zoom: 12,
+            zoom: 5,
             zoomControl: true,
             zoomControlOptions: {
                 style: naver.maps.ZoomControlStyle.SMALL,
@@ -182,113 +213,139 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
 
-        // 마커 & 클릭 이벤트
-        board.pictureDtos.forEach((dto, idx) => {
+        const markers = [];
+        const bounds = new naver.maps.LatLngBounds(); // 전체 경로 bounds
+
+        for (let i = 0; i < board.pictureDtos.length; i++) {
+            const dto = board.pictureDtos[i];
             const marker = new naver.maps.Marker({
                 position: new naver.maps.LatLng(dto.latitude, dto.longitude),
                 map: map,
-                title: `여행지 ${idx + 1}`,
-                clickable: true
+                title: `여행지 ${i + 1}`
             });
 
-            naver.maps.Event.addListener(marker, "click", () => {
-                if (photoContainer && photo && board.pictures[idx]) {
-                    photo.src = board.pictures[idx];
+            naver.maps.Event.addListener(marker, "click", async () => {
+                if (photoContainer && photo && board.pictures[i]) {
+                    photo.src = board.pictures[i];
                     photoContainer.style.display = "flex";
                 }
-            });
-        });
 
-        // 여러 경유지 경로 Polyline
+                if (i < board.pictureDtos.length - 1) {
+                    const start = dto;
+                    const goal = board.pictureDtos[i + 1];
+                    try {
+                        const dirRes = await fetch(
+                            `/api/naver/direction?startLat=${start.latitude}&startLng=${start.longitude}&goalLat=${goal.latitude}&goalLng=${goal.longitude}`
+                        );
+                        const dirData = await dirRes.json();
+                        if (dirData.route && dirData.route.traoptimal && dirData.route.traoptimal.length > 0) {
+                            const durationSec = dirData.route.traoptimal[0].summary.duration;
+                            const hours = Math.floor(durationSec / 3600);
+                            const minutes = Math.floor((durationSec % 3600) / 60);
+                        }
+                    } catch (err) {
+                        console.error("경로 정보 불러오기 실패:", err);
+                    }
+                }
+            });
+
+            markers.push(marker);
+            bounds.extend(marker.getPosition()); // bounds에 마커 추가
+        }
+
+        // 모든 마커와 Polyline이 포함되도록 지도 범위 조정
+        map.fitBounds(bounds);
+
+        if (naver.maps.MarkerClusterer) {
+            new naver.maps.MarkerClusterer({
+                map: map,
+                markers: markers,
+                minClusterSize: 2,
+                gridSize: 120
+            });
+        }
+
+        // Polyline
         for (let i = 0; i < board.pictureDtos.length - 1; i++) {
             const start = board.pictureDtos[i];
             const goal = board.pictureDtos[i + 1];
+        
+            try {
+                const dirRes = await fetch(
+                    `/api/naver/direction?startLat=${start.latitude}&startLng=${start.longitude}&goalLat=${goal.latitude}&goalLng=${goal.longitude}`
+                );
+                const dirData = await dirRes.json();
+                
+                if (dirData.route && dirData.route.traoptimal && dirData.route.traoptimal.length > 0) {
+                    const sections = dirData.route.traoptimal[0].section;
+                    const speeds = sections.map(sec => sec.speed);
+                    
+                    let avgSpeed = 0;
+                    if(speeds !== null) {
+                        for(let j = 0; j < speeds.length; j++) {
+                            avgSpeed += speeds[j];
+                        }
+                        avgSpeed /= speeds.length;
+                    }
+                    
+                    avgSpeed = Math.round(parseFloat(avgSpeed).toFixed(1));
+                    
+                    const totalDistance = dirData.route.traoptimal[0].summary.distance; // 미터 단위
+                    const totalDistanceKm = totalDistance / 1000; // km로 변환
 
-            const dirRes = await fetch(
-                `/api/naver/direction?startLat=${start.latitude}&startLng=${start.longitude}&goalLat=${goal.latitude}&goalLng=${goal.longitude}`
-            );
-            const dirData = await dirRes.json();
+                    // 이동 시간 = 거리 / 속도
+                    const durationHours = totalDistanceKm / avgSpeed;
+                    const hours = Math.floor(durationHours);
+                    const minutes = Math.round((durationHours - hours) * 60);
 
-            if (dirData.route && dirData.route.traoptimal && dirData.route.traoptimal.length > 0) {
-                const path = dirData.route.traoptimal[0].path
-                    .filter(coord => Array.isArray(coord) && coord.length === 2)
-                    .map(coord => new naver.maps.LatLng(coord[1], coord[0]));
+                    // 경로(path) Polyline
+                    const path = dirData.route.traoptimal[0].path
+                        .filter(c => Array.isArray(c) && c.length === 2)
+                        .map(c => new naver.maps.LatLng(c[1], c[0]));
 
-                if (path.length > 0) {
-                    new naver.maps.Polyline({
-                        map: map,
-                        path: path,
-                        strokeColor: "#FF0000",
-                        strokeOpacity: 0.8,
-                        strokeWeight: 4
-                    });
+                    if (path.length > 1) { // 최소 2개 이상이어야 Polyline 생성
+                        new naver.maps.Polyline({
+                            map: map,
+                            path: path,
+                            strokeColor: "#FF0000",
+                            strokeOpacity: 0.8,
+                            strokeWeight: 4
+                        });
+
+                        // 경로 중간 위치 확인
+                        const midIndex = Math.floor(path.length / 2);
+                        const midLatLng = path[midIndex];
+
+                        if (midLatLng) { // midLatLng가 존재할 때만 InfoWindow 생성
+                            new naver.maps.Marker({
+                                position: midLatLng,
+                                map: map,
+                                icon: {
+                                    content: `<div style="padding:5px; background:white; border:1px solid black;">
+                                    ${hours > 0 ? `${hours}시간 ` : ""}${minutes}분</div>`    
+                                }
+                            });
+                        }
+                    }
                 }
+            } catch (err) {
+                console.error("Polyline 생성 실패:", err);
             }
         }
-    } catch (err) {
-        console.error(err);
     }
 
-    // 댓글 수정 이벤트(위임)
-    document.addEventListener("click", async (e) => {
-        // 수정 버튼 클릭
-        if(e.target.classList.contains("edit-comment")) {
-            e.preventDefault();
-            const commentId = e.target.dataset.id;
-
-            const commentDiv = e.target.closest("div.border");
-            const contentP = commentDiv.querySelector("p");
-
-            // 이미 수정 보드면 무시
-            if(commentDiv.querySelector("textarea")) return;
-
-            const originalContent = contentP.textContent;
-
-            // textarea + 저장버튼 UI 변경
-            contentP.innerHTML = `
-            <textarea class="form-control mb-2 edit-textarea">${originalContent}</textarea>
-            <button class="btn btn-sm btn-success save-edit" data-id="${commentId}">저장</button>
-            <button class="btn btn-sm btn-secondary cancel-edit" data-id="${commentId}">취소</button>
-        `;
+    // ---------------------------
+    // 지도 데이터 불러오기
+    // ---------------------------
+    try {
+        const res = await fetch(`/board/api/board/${boardId}`);
+        const board = await res.json();
+        if (window.naver && naver.maps) {
+            initMap(board);
+        } else {
+            console.error("naver.maps 로드 실패");
         }
-
-        // 저장 버튼 클릭
-        if (e.target.classList.contains("save-edit")) {
-            e.preventDefault();
-            const commentId = e.target.dataset.id;
-            const commentDiv = e.target.closest("div.border");
-            const textarea = commentDiv.querySelector(".edit-textarea");
-            const newContent = textarea.value.trim();
-
-            if (!newContent) return alert("내용을 입력하세요!");
-
-            try {
-                const res = await fetch(`/board/comment/${commentId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ content: newContent })
-                });
-
-                if (!res.ok) throw new Error("수정 실패");
-
-                // 성공 시 화면 갱신
-                commentDiv.querySelector("p").innerHTML = newContent;
-            } catch (err) {
-                alert("댓글 수정에 실패했습니다.");
-                console.error(err);
-            }
-        }
-
-        // 취소 버튼 클릭
-        if (e.target.classList.contains("cancel-edit")) {
-            e.preventDefault();
-            const commentId = e.target.dataset.id;
-            const commentDiv = e.target.closest("div.border");
-            const textarea = commentDiv.querySelector(".edit-textarea");
-            const originalContent = textarea ? textarea.value : "";
-
-            // textarea → 원래 내용 복원
-            commentDiv.querySelector("p").innerHTML = originalContent;
-        }
-    })
+    } catch (err) {
+        console.error("지도 데이터 불러오기 실패:", err);
+    }
 });

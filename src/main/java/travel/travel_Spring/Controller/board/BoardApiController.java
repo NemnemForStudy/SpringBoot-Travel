@@ -58,9 +58,6 @@ public class BoardApiController {
             @RequestParam(value = "longitude", required = false) List<String> longitudes,
             @RequestParam(value = "selectedDropdownOptions", required = false) List<String> selectedDropdownOptions) throws IOException {
 
-        if(title.isEmpty() || title == null) {
-            return ResponseEntity.badRequest().body("에러");
-        }
         Board board = new Board();
         board.setTitle(title);
         board.setContent(content);
@@ -71,6 +68,10 @@ public class BoardApiController {
         board.setViewCount(0);
         board.setLikeCount(0);
         board.setSelectedDropdownOptions(selectedDropdownOptions);
+
+        if(title.isEmpty() || title == null) {
+            return ResponseEntity.badRequest().body("에러");
+        }
 
         boardRepository.save(board);
 
@@ -230,15 +231,18 @@ public class BoardApiController {
 
         // List<BoardPicture> 에서 제거할 때는 BoardPicture 객체 자체 제거해야함.
         List<BoardPicture> pictures = board.getPictures();
-        for(String deleteImage : deletedImages) {
-            Iterator<BoardPicture> iter = pictures.iterator();
-            while (iter.hasNext()) {
-                BoardPicture picture = iter.next();
-                if(deleteImage.equals(picture.getPictureUrl())) {
-                    iter.remove();
+        if(deletedImages != null) {
+            for(String deleteImage : deletedImages) {
+                Iterator<BoardPicture> iter = pictures.iterator();
+                while (iter.hasNext()) {
+                    BoardPicture picture = iter.next();
+                    if(deleteImage.equals(picture.getPictureUrl())) {
+                        iter.remove();
+                    }
                 }
             }
         }
+
         boardRepository.save(board);
 
         return ResponseEntity.ok(Map.of("success", true));

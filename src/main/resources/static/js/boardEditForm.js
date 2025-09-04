@@ -21,7 +21,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // 수정 버튼 클릭
     document.getElementById('editBtn').addEventListener('click', () => {
         debugger;
-        const boardId = document.body.getAttribute('data-board-id');
         window.location.href = `/board/update?boardId=${boardId}`;
     });
     

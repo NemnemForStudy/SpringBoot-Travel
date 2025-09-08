@@ -5,17 +5,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import travel.travel_Spring.Controller.Config.SecurityConfig;
 import travel.travel_Spring.Controller.DTO.BoardDto;
+import travel.travel_Spring.Controller.DTO.BoardPictureDto;
 import travel.travel_Spring.Controller.DTO.CommentRequestDto;
 import travel.travel_Spring.Controller.DTO.CommentResponseDto;
 import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.BoardPicture;
 import travel.travel_Spring.Entity.Comment;
+import travel.travel_Spring.Impl.CommentServiceImpl;
+import travel.travel_Spring.Service.BoardLikeService;
 import travel.travel_Spring.Service.BoardService;
 import travel.travel_Spring.Service.CommentService;
+import travel.travel_Spring.Service.UserService;
 import travel.travel_Spring.UserDetails.LoginUserDetails;
 import travel.travel_Spring.repository.BoardPictureRepository;
 import travel.travel_Spring.repository.BoardRepository;
@@ -39,6 +44,9 @@ public class BoardApiController {
     private final BoardRepository boardRepository;
     private final BoardPictureRepository boardPictureRepository;
     private final CommentService commentService;
+    private final CommentServiceImpl commentServiceImpl;
+    private final UserService userService;
+    private final BoardLikeService likeService;
 
     // 글 작성 (POST 요청)
     @PostMapping("/write")
@@ -46,6 +54,8 @@ public class BoardApiController {
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "latitude", required = false) List<String> latitudes,
+            @RequestParam(value = "longitude", required = false) List<String> longitudes,
             @RequestParam(value = "selectedDropdownOptions", required = false) List<String> selectedDropdownOptions) throws IOException {
 
         Board board = new Board();
@@ -58,13 +68,21 @@ public class BoardApiController {
         board.setViewCount(0);
         board.setLikeCount(0);
         board.setSelectedDropdownOptions(selectedDropdownOptions);
+
+        if(title.isEmpty() || title == null) {
+            return ResponseEntity.badRequest().body("에러");
+        }
+
         boardRepository.save(board);
 
         List<String> pictureUrls = new ArrayList<>();
         if (files != null && !files.isEmpty()) {
-            for (MultipartFile file : files) {
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile file = files.get(i);
+
                 if (!file.isEmpty()) {
                     String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                    System.out.println(filename);
                     Path filepath = Paths.get("uploads", filename);
                     Files.createDirectories(filepath.getParent()); // 폴더 없으면 생성
                     file.transferTo(filepath); // 서버에 저장
@@ -72,8 +90,14 @@ public class BoardApiController {
                     BoardPicture boardPicture = new BoardPicture();
                     boardPicture.setBoard(board);
                     boardPicture.setPictureUrl("/uploads/" + filename); // DB에는 URL만 지정
-                    boardPictureRepository.save(boardPicture);
 
+                    // 파일 순서와 동일한 Lat,Lng매핑
+                    if (latitudes != null && longitudes != null && i < latitudes.size()) {
+                        boardPicture.setLatitude(Double.parseDouble(latitudes.get(i)));
+                        boardPicture.setLongitude(Double.parseDouble(longitudes.get(i)));
+                    }
+
+                    boardPictureRepository.save(boardPicture);
                     pictureUrls.add("/uploads/" + filename);
                 }
             }
@@ -83,8 +107,9 @@ public class BoardApiController {
     }
 
     @GetMapping("/travelDestination")
-    public ResponseEntity<Map<String, Object>> getAllBoards() {
-        List<BoardDto> boards = boardService.getAllBoards(); // 전체 게시글
+    public ResponseEntity<Map<String, Object>> getAllBoards(@AuthenticationPrincipal UserDetails userDetails) {
+        String currentUserEmail = userDetails.getUsername();
+        List<BoardDto> boards = boardService.getAllBoards(currentUserEmail); // 전체 게시글
         Map<String, Object> response = new HashMap<>();
         response.put("boards", boards);
         response.put("totalCount", boards.size());
@@ -100,6 +125,27 @@ public class BoardApiController {
         return ResponseEntity.ok(Map.of("success", true, "likeCount", updatedCount));
     }
 
+    @GetMapping("/api/board/{boardId}/status")
+    public ResponseEntity<Map<String, Object>> likeAndCommentAndEmailStatus(@PathVariable Long boardId, @AuthenticationPrincipal UserDetails userDetails) {
+        String currentUserEmail = userDetails.getUsername();
+
+        Board board = boardService.findById(boardId);
+        String authorNickname = board.getAuthor();
+        String authorEmail = userService.getEmailByNickname(authorNickname);
+
+        boolean liked = likeService.hasUserLiked(boardId, currentUserEmail);
+        long likeCount = likeService.getLikeCount(boardId);
+        long commentCount = commentService.getCommentCount(boardId);
+
+        return ResponseEntity.ok(Map.of(
+                "liked", liked,
+                "likeCount", likeCount,
+                "commentCount", commentCount,
+                "currentUserEmail", currentUserEmail,
+                "authorEmail", authorEmail
+        ));
+    }
+
     // 특정 게시글의 상세 정보, 현재 사용자가 좋아요 눌렀는지 상태 함께 제공.
     // boardDetailFunction.js Get
     @GetMapping("/api/board/{boardId}")
@@ -107,19 +153,42 @@ public class BoardApiController {
         Board board = boardService.findById(boardId);
         boolean likedByUser = boardService.hasUserLiked(boardId, principal.getName());
 
-        BoardDto boardDto = new BoardDto();
-        boardDto.setId(board.getId());
-        boardDto.setTitle(board.getTitle());
-        boardDto.setContent(board.getContent());
-        boardDto.setLikeCount(board.getLikeCount());
-        boardDto.setLikedByCurrentUser(likedByUser);
-        boardDto.setSelectedDropdownOptions(board.getSelectedDropdownOptions());
+        // 좌표
+        List<BoardPictureDto> pictureDtos = board.getBoardPictures().stream()
+                .sorted(Comparator.comparing(
+                        BoardPicture::getOrderIndex,
+                        Comparator.nullsLast(Integer::compareTo))) // 순서 기준 정렬, null이면 마지막으로 보냄.
+                .map(bp -> new BoardPictureDto(bp.getFilename(), bp.getLatitude(), bp.getLongitude(), bp.getOrderIndex()))
+                .collect(Collectors.toList());
 
         // 사진 URL 리스트 세팅
-        List<String> pictureUrls = board.getPictures().stream()
+        List<String> pictureUrls = board.getBoardPictures().stream()
+                .sorted(Comparator.comparing(
+                        BoardPicture::getOrderIndex,
+                        Comparator.nullsLast(Integer::compareTo)
+                ))
                 .map(BoardPicture::getPictureUrl)
                 .collect(Collectors.toList());
-        boardDto.setPictures(pictureUrls);
+
+        List<CommentResponseDto> commentDtos = commentService.getCommentByBoardId(boardId).stream()
+                .map(comment -> new CommentResponseDto(comment, principal.getName()))
+                .collect(Collectors.toList());
+
+        BoardDto boardDto = new BoardDto(
+                board.getId(),
+                board.getTitle(),
+                board.getContent(),
+                board.getEmail(),
+                pictureUrls,
+                board.getCreateTime(),
+                board.getUpdateTime(),
+                board.getLikeCount(),
+                board.getSelectedDropdownOptions(),
+                pictureDtos,
+                commentDtos
+        );
+
+        boardDto.setLikedByCurrentUser(likedByUser);
 
         return ResponseEntity.ok(boardDto);
     }
@@ -162,15 +231,18 @@ public class BoardApiController {
 
         // List<BoardPicture> 에서 제거할 때는 BoardPicture 객체 자체 제거해야함.
         List<BoardPicture> pictures = board.getPictures();
-        for(String deleteImage : deletedImages) {
-            Iterator<BoardPicture> iter = pictures.iterator();
-            while (iter.hasNext()) {
-                BoardPicture picture = iter.next();
-                if(deleteImage.equals(picture.getPictureUrl())) {
-                    iter.remove();
+        if(deletedImages != null) {
+            for(String deleteImage : deletedImages) {
+                Iterator<BoardPicture> iter = pictures.iterator();
+                while (iter.hasNext()) {
+                    BoardPicture picture = iter.next();
+                    if(deleteImage.equals(picture.getPictureUrl())) {
+                        iter.remove();
+                    }
                 }
             }
         }
+
         boardRepository.save(board);
 
         return ResponseEntity.ok(Map.of("success", true));
@@ -198,6 +270,7 @@ public class BoardApiController {
         return ResponseEntity.ok(response);
     }
 
+    // 댓글 추가
     @PostMapping("/{boardId}/comment")
     public ResponseEntity<?> addComment(@PathVariable Long boardId,
                                         @RequestBody CommentRequestDto request,
@@ -219,7 +292,7 @@ public class BoardApiController {
     }
 
     // 댓글 리스트
-    @GetMapping("/{boardId}/comments")
+    @GetMapping("/api/board/{boardId}/comments")
     public ResponseEntity<List<CommentResponseDto>> showCommentList(@PathVariable Long boardId, @AuthenticationPrincipal LoginUserDetails userDetails) {
         List<Comment> comments = commentService.getCommentByBoardId(boardId);
         String currentEmail = userDetails.getEmail();
@@ -247,5 +320,17 @@ public class BoardApiController {
         // 댓글 삭제
         commentService.deleteComment(commentId);
         return ResponseEntity.ok("삭제 성공");
+    }
+
+    // 댓글 수정
+    @PutMapping("/comment/{commentId}")
+    public ResponseEntity<?> updateComment(
+            @PathVariable Long commentId,
+            @RequestBody Map<String, String> request
+    ) {
+        String newContent = request.get("content");
+        CommentResponseDto updateComment = commentServiceImpl.updateComment(commentId, newContent);
+
+        return ResponseEntity.ok(updateComment);
     }
 }

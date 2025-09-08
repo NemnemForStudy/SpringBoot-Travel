@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 import travel.travel_Spring.Entity.Board;
 
+import java.awt.print.Pageable;
 import java.util.List;
 import java.util.Optional;
 

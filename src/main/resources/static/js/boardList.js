@@ -27,8 +27,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         pageBoards.forEach(board => {
             const cardCol = document.createElement("div");
+            const commentCount = board.commentList.length;
+            
             cardCol.className = "col";
-
             cardCol.innerHTML = `
                 <div class="card h-100">
                     <div class="d-flex">
@@ -40,8 +41,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                             <p class="card-text">${board.content}</p>
                             <div class="d-flex">
                                 <small class="text-muted">작성일: ${board.createTimeAgo}</small>
-                                <i class="bi bi-heart-fill"></i>
+                                <i style="margin-left: 5px;" class="bi bi-heart-fill"></i>
                                 <span class="ms-1 like-count">${board.likeCount}</span>
+                                <i style="margin-left: 5px;" class="bi bi-chat-square"></i>
+                                <span class="ms-1 comment-count">${commentCount}</span>
                             </div>
                         </div>
                     </div>

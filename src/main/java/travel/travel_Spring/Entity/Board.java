@@ -1,5 +1,6 @@
 package travel.travel_Spring.Entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -59,8 +60,9 @@ public class Board {
 
     // Board : BoardPicture = 1 : N
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<BoardPicture> pictures = new ArrayList<>();
-
+    
     @ElementCollection
     // 이렇게 하면 board_selected_options라는 테이블을 만들어줌.
     @CollectionTable(

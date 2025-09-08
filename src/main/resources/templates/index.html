@@ -113,39 +113,9 @@
 <!-- 2. row-cols-1 -> 모바일 화면에서는 한 줄에 1개의 열만 배치 -->
 <!-- 3. row-cols-md-2 -> 중간 크기 이상 화면(md이상)에서는 한 줄에 2개 열 배치 -->
 <!-- 4. g-4 -> 열과 열 사이에 gutter 간격을 줌. 숫자가 클 수록 간격이 큼. -->
-<div class="row row-cols-1 row-cols-md-3 g-4" style="margin: 30px 30px 30px; width: 100%; height: 500px;">
-    <div class="col">
-        <div class="card">
-            <img src="/Image/사진1.PNG" class="card-img-top card-img" alt="사진1">
-            <div class="card-body">
-                <h5 class="card-title">Card title1</h5>
-                <p class="card-text">This is a longer card with supporting text below as a natural lead-in to additional
-                    content. This content is a little bit longer.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card">
-            <img src="/Image/사진2.PNG" class="card-img-top card-img" alt="사진2">
-            <div class="card-body">
-                <h5 class="card-title">Card title2</h5>
-                <p class="card-text">This is a longer card with supporting text below as a natural lead-in to additional
-                    content. This content is a little bit longer.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card">
-            <img src="/Image/사진3.png" class="card-img-top card-img" alt="사진3">
-            <div class="card-body">
-                <h5 class="card-title">Card title3</h5>
-                <p class="card-text">This is a longer card with supporting text below as a natural lead-in to additional
-                    content. This content is a little bit longer.</p>
-            </div>
-        </div>
-    </div>
-</div>
+<div id="top3CardsContainer" class="row row-cols-1 row-cols-md-3 g-4" style="margin: 30px 30px 30px; width: 100%; height: 500px;"></div>
 <!-- Bootstrap JS CDN (반응형 토글 버튼 등 작동하려면 필요함) -->
+<script src="/js/indexFunction.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

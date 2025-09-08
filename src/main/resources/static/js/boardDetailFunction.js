@@ -113,6 +113,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         div.classList.add("border", "p-2", "mb-2", "rounded", "position-relative");
 
         let threeDotsHTML = "";
+        console.log("comment : ", comment);
         if (currentUserEmail === comment.email) {
             threeDotsHTML = `
                 <div class="dropdown position-absolute" style="top:5px; right:5px;">
@@ -125,7 +126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
             `;
         }
-
+ 
         div.innerHTML = `
             <strong>${comment.author}</strong> 
             <span class="text-muted" style="font-size:0.8rem;">${comment.createTimeAgo}</span>

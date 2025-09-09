@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -62,7 +63,7 @@ public class Board {
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<BoardPicture> pictures = new ArrayList<>();
-    
+
     @ElementCollection
     // 이렇게 하면 board_selected_options라는 테이블을 만들어줌.
     @CollectionTable(
@@ -85,4 +86,13 @@ public class Board {
     @ManyToMany
     @JoinTable(name = "board_likes", joinColumns = @JoinColumn(name = "board_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> likedUsers = new HashSet<>();
+
+    public String getCreateTimeAgo() {
+        if (createTime == null) return "";
+        Duration duration = Duration.between(createTime, LocalDateTime.now());
+        if (duration.toMinutes() < 1) return "방금 전";
+        if (duration.toHours() < 1) return duration.toMinutes() + "분 전";
+        if (duration.toDays() < 1) return duration.toHours() + "시간 전";
+        return duration.toDays() + "일 전";
+    }
 }

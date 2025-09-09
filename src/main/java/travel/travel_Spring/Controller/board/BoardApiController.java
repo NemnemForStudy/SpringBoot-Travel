@@ -333,4 +333,15 @@ public class BoardApiController {
 
         return ResponseEntity.ok(updateComment);
     }
+
+//    // 검색기능
+//    @GetMapping("/search")
+//    @ResponseBody
+//    public List<BoardDto> searchBoard(@RequestParam("query") String query) {
+//        List<Board> boards = boardService.searchByContent(query);
+//        return boardRepository.findByContentContaining(query)
+//                .stream()
+//                .map(board -> new BoardDto(board))
+//                .toList();
+//    }
 }

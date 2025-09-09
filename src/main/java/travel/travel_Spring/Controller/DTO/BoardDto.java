@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.BoardPicture;
 import travel.travel_Spring.Entity.Comment;
 
@@ -88,6 +89,13 @@ public class BoardDto {
         this.title = title;
         this.pictureDtos = pictureDtos;
         this.commentList = commentList;
+    }
+
+    public BoardDto(Board board) {
+        this.id = board.getId();
+        this.title = board.getTitle();
+        this.content = board.getContent();
+        this.createTimeAgo = getTimeAgo(board.getCreateTime());
     }
 
     private String getTimeAgo(LocalDateTime createTime) {

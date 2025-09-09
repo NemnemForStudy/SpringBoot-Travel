@@ -13,10 +13,7 @@ import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Entity.BoardPicture;
 import travel.travel_Spring.Entity.User;
 import travel.travel_Spring.Impl.CommentServiceImpl;
-import travel.travel_Spring.repository.BoardLikeRepository;
-import travel.travel_Spring.repository.BoardPictureRepository;
-import travel.travel_Spring.repository.BoardRepository;
-import travel.travel_Spring.repository.UserRepository;
+import travel.travel_Spring.repository.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -43,16 +40,20 @@ public class BoardService {
     @Autowired
     private final CommentServiceImpl commentService;
 
+    @Autowired
+    private final CommentRepository commentRepository;
+
     public Board save(Board board) {
         return boardRepository.save(board);
     }
 
-    public BoardService(BoardRepository boardRepository, BoardPictureRepository boardPictureRepository, BoardLikeRepository likeRepository, UserRepository userRepository, CommentServiceImpl commentService) {
+    public BoardService(BoardRepository boardRepository, BoardPictureRepository boardPictureRepository, BoardLikeRepository likeRepository, UserRepository userRepository, CommentServiceImpl commentService, CommentRepository commentRepository) {
         this.boardRepository = boardRepository;
         this.boardPictureRepository = boardPictureRepository;
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
         this.commentService = commentService;
+        this.commentRepository = commentRepository;
     }
 
     @Transactional
@@ -220,16 +221,7 @@ public class BoardService {
         return likeRepository.existsByBoardIdAndUserEmail(boardId, email);
     }
 
-//    public BoardDto getBoardWithCoordinates(Long boardId) {
-//        Board board = boardRepository.findById(boardId)
-//                .orElseThrow(() -> new RuntimeException("게시글 없음"));
-//
-//        List<BoardPictureDto> pictureDtos = board.getBoardPictures().stream()
-//                .map(BoardPictureDto::new)
-//                .collect(Collectors.toList());
-//
-//        List<CommentResponseDto> comment = commentService.getCommentById(boardId)
-//
-//        return new BoardDto(board.getId(), board.getTitle(), pictureDtos);
-//    }
+    public List<Board> searchByTitle(String query) {
+        return boardRepository.findByTitleContaining(query);
+    }
 }

@@ -9,8 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const carouselIndicators = document.querySelector("#carouselCaptions .carousel-indicators");
 
             cardContainer.innerHTML = ""; // 기존 카드 내용 제거
-            carouselContainer.innerHTML = ""; // 기존 슬라이드 제거
-            carouselIndicators.innerHTML = ""; // 기존 인디케이터 제거
+            // carouselContainer.innerHTML = ""; // 기존 슬라이드 제거
+            // carouselIndicators.innerHTML = ""; // 기존 인디케이터 제거
 
             const items = Array.isArray(data) ? data.slice(0, 3) : [data];
 
@@ -67,11 +67,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const carouselTitle = document.createElement('h5');
                 carouselTitle.textContent = item.title;
-                const carouselText = document.createElement('p');
-                carouselText.textContent = item.content;
+                // const carouselText = document.createElement('p');
+                // carouselText.textContent = item.content;
 
                 carouselCaption.appendChild(carouselTitle);
-                carouselCaption.appendChild(carouselText);
+                // carouselCaption.appendChild(carouselText);
 
                 carouselItem.appendChild(carouselImg);
                 carouselItem.appendChild(carouselCaption);

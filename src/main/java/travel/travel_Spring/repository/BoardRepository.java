@@ -20,4 +20,6 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     // DB에서 Board 테이블의 author 컬럼을 일괄 업데이트하는 역할을 함.
     @Query("UPDATE Board b SET b.author = :newAuthor WHERE b.author = :oldAuthor")
     void updateAuthorByAuthor(@Param("oldAuthor") String oldAuthor, @Param("newAuthor") String newAuthor);
+
+    List<Board> findByTitleContaining(String title);
 }

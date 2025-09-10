@@ -1,6 +1,8 @@
 package travel.travel_Spring.Controller.board;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -10,7 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import travel.travel_Spring.Controller.DTO.BoardDto;
-import travel.travel_Spring.Entity.Board;
 import travel.travel_Spring.Service.BoardService;
 
 import java.util.List;
@@ -29,15 +30,16 @@ public class BoardController {
         return "boardDetailForm";
     }
 
-    // 전체 게시글 리스트
     @GetMapping("/search")
-    public String boardListPage(@RequestParam("query") String query, Model model) {
-        List<Board> boards = boardService.searchByTitle(query);
-        List<BoardDto> boardDtos = boards.stream()
-                        .map(BoardDto::new)
-                        .toList();
+    public String searchBoards(@RequestParam String query,
+                               @RequestParam(defaultValue = "0") int page,
+                               @AuthenticationPrincipal UserDetails userDetails,
+                               Model model) {
+        String email = userDetails.getUsername();
 
-        model.addAttribute("boards", boardDtos);
+        Pageable pageable = PageRequest.of(page, 8);
+        List<BoardDto> results = boardService.searchBoards(query, email);
+        model.addAttribute("boards", results);
         return "search";
     }
 }

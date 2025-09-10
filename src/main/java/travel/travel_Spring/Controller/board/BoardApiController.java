@@ -3,6 +3,7 @@ package travel.travel_Spring.Controller.board;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -334,14 +335,10 @@ public class BoardApiController {
         return ResponseEntity.ok(updateComment);
     }
 
-//    // 검색기능
-//    @GetMapping("/search")
-//    @ResponseBody
-//    public List<BoardDto> searchBoard(@RequestParam("query") String query) {
-//        List<Board> boards = boardService.searchByContent(query);
-//        return boardRepository.findByContentContaining(query)
-//                .stream()
-//                .map(board -> new BoardDto(board))
-//                .toList();
-//    }
+    // 검색기능
+    @GetMapping("/api/allBoards")
+    @ResponseBody // DTO 리스트를 JSON 형태로 바로 반환
+    public List<BoardDto> getAllBoardsForSearch() {
+        return boardService.getAllBoardsForSearch();
+    }
 }

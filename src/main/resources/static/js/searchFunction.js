@@ -1,116 +1,89 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const boardList = document.getElementById("board-list");
-    const paginationContainer = document.querySelector("ul.pagination");
-    const searchForm = document.getElementById("searchForm");
-    const searchInput = document.getElementById("searchInput");
-    const postsPerPage = 8;
+// URL에서 특정 파라미터(쿼리) 값을 가져오는 함수
+function getQueryParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
 
-    let boards = [];
-    let currentPage = 1;
+// 검색 결과를 화면에 렌더링하는 함수
+function renderSearchResults(boards) {
+    const boardList = document.getElementById("board-list");
+    boardList.innerHTML = "";
 
-    searchForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const query = searchInput.value.trim();
-        if (!query) return;
+    // 게시글이 없으면 "검색 결과 없음" 메시지 표시
+    if (boards.length === 0) {
+        boardList.innerHTML = `<p class="text-center">검색 결과가 없습니다.</p>`;
+        return;
+    }
 
-        try {
-            const res = await fetch(`/board/search?query=${encodeURIComponent(query)}`);
-            boards = await res.json();
-            currentPage = 1;
-            renderBoardList();
-            renderPagination();
-        } catch (err) {
-            console.error("검색 실패:", err);
-            boardList.innerHTML = "<p>검색 중 오류가 발생했습니다.</p>";
-        }
-    });
+    boards.forEach(board => {
+    console.log("board : ", board);
+        const col = document.createElement("div");
+        col.className = "col-12 col-md-6 col-lg-4 mb-3";
 
-    function renderBoardList() {
-        boardList.innerHTML = "";
+        const commentCount = board.commentList ? board.commentList.length : 0;
 
-        if (boards.length === 0) {
-            boardList.innerHTML = "<p>검색 결과가 없습니다.</p>";
-            return;
-        }
+        col.innerHTML = `
+            <div class="card h-100">
+                <div class="d-flex">
+                    <div class="image-box me-3">
+                        <img src="${board.pictures && board.pictures.length > 0 ? board.pictures[0] : '/images/default.jpg'}">
+                    </div>
+                    <div class="card-body p-0">
+                        <h5 class="card-title">${board.title}</h5>
+                        <p class="card-text">${board.content}</p>
+                        <div class="d-flex">
+                            <small class="text-muted">작성일: ${board.createTimeAgo}</small>
+                            <i style="margin-left: 5px;" class="bi bi-heart-fill"></i>
+                            <span class="ms-1 like-count">${board.likeCount}</span>
+                            <i style="margin-left: 5px;" class="bi bi-chat-square"></i>
+                            <span class="ms-1 comment-count">${commentCount}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
 
-        const start = (currentPage - 1) * postsPerPage;
-        const end = start + postsPerPage;
-        const pageBoards = boards.slice(start, end);
+        col.addEventListener("click", () => {
+            window.location.href = `/board/boardDetailForm/${board.id}`;
+        });
 
-        pageBoards.forEach(board => {
-            const col = document.createElement("div");
-            col.className = "col-12 col-md-6 col-lg-4 mb-3";
+        boardList.appendChild(col);
+    });
+}
 
-            const commentCount = board.commentList ? board.commentList.length : 0;
 
-            col.innerHTML = `
-                <div class="card h-100">
-                    <div class="d-flex">
-                        <div class="image-box me-3">
-                            <img src="${board.pictures && board.pictures.length > 0 ? board.pictures[0] : '/images/default.jpg'}" class="card-img-top">
-                        </div>
-                        <div class="card-body p-0">
-                            <h5 class="card-title">${board.title}</h5>
-                            <p class="card-text">${board.content}</p>
-                            <div class="d-flex">
-                                <small class="text-muted">작성일: ${board.createTimeAgo}</small>
-                                <i class="bi bi-heart-fill ms-2"></i>
-                                <span class="ms-1 like-count">${board.likeCount}</span>
-                                <i class="bi bi-chat-square ms-2"></i>
-                                <span class="ms-1 comment-count">${commentCount}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+// 검색 기능 초기화 함수
+// function initializeSearch() {
+//     const query = getQueryParam('query');
+    
+//     // 서버에서 모든 게시글 데이터를 가져옵니다.
+//     // 이 부분은 실제 API 엔드포인트에 맞게 수정해야 합니다.
+//     fetch('/board/api/allBoards')
+//         .then(response => {
+//             if (!response.ok) {
+//                 throw new Error('네트워크 응답이 올바르지 않습니다.');
+//             }
+//             return response.json();
+//         })
+//         .then(allBoards => {
+//             let filteredBoards = allBoards;
 
-            col.addEventListener("click", () => {
-                window.location.href = `/board/boardDetailForm/${board.id}`;
-            });
+//             if (query) {
+//                 const lowerCaseQuery = query.toLowerCase();
+//                 filteredBoards = allBoards.filter(board => {
+//                     return board.title.toLowerCase().includes(lowerCaseQuery);
+//                 });
+//             }
 
-            boardList.appendChild(col);
-        });
-    }
+//             // 필터링된 결과를 렌더링 함수에 전달
+//             renderSearchResults(filteredBoards);
+//         })
+//         .catch(error => {
+//             console.error('게시글을 가져오는 중 오류 발생:', error);
+//             const boardList = document.getElementById("board-list");
+//             boardList.innerHTML = `<p class="text-center text-danger">게시글을 불러올 수 없습니다. 다시 시도해 주세요.</p>`;
+//         });
+// }
 
-    function renderPagination() {
-        paginationContainer.innerHTML = "";
-        const totalPages = Math.ceil(boards.length / postsPerPage);
-
-        // Previous
-        const prevLi = document.createElement("li");
-        prevLi.className = "page-item" + (currentPage === 1 ? " disabled" : "");
-        prevLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a>`;
-        paginationContainer.appendChild(prevLi);
-
-        // 페이지 번호
-        for (let i = 1; i <= totalPages; i++) {
-            const li = document.createElement("li");
-            li.className = "page-item" + (i === currentPage ? " active" : "");
-            li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
-            paginationContainer.appendChild(li);
-        }
-
-        // Next
-        const nextLi = document.createElement("li");
-        nextLi.className = "page-item" + (currentPage === totalPages ? " disabled" : "");
-        nextLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>`;
-        paginationContainer.appendChild(nextLi);
-    }
-
-    // 페이지 클릭 이벤트
-    paginationContainer.addEventListener("click", (e) => {
-        if (!e.target.classList.contains("page-link")) return;
-        e.preventDefault();
-
-        let pageNum = parseInt(e.target.dataset.page);
-        if (isNaN(pageNum)) return;
-
-        const totalPages = Math.ceil(boards.length / postsPerPage);
-        if (pageNum < 1) pageNum = 1;
-        if (pageNum > totalPages) pageNum = totalPages;
-
-        currentPage = pageNum;
-        renderBoardList();
-        renderPagination();
-    });
-});
+// 페이지가 로드되면 검색 초기화 함수를 실행합니다.
+// document.addEventListener('DOMContentLoaded', initializeSearch);

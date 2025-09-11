@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -96,6 +97,12 @@ public class BoardDto {
         this.title = board.getTitle();
         this.content = board.getContent();
         this.createTimeAgo = getTimeAgo(board.getCreateTime());
+
+        if(board.getPictures() != null) {
+            this.pictureDtos = board.getPictures().stream()
+                    .map(p -> new BoardPictureDto(p.getFilename(), p.getLatitude(), p.getLongitude()))
+                    .collect(Collectors.toList());
+        }
     }
 
     // 검색 전용으로 새롭게 추가할 생성자 (댓글 제외)

@@ -22,11 +22,16 @@
                 </div>
     
                 <!-- 로그인 상태일 때 -->
-                <div sec:authorize="isAuthenticated()">
-                    <div>
-                        <input type="text" class="form-control" placeholder="Recipient’s username" aria-label="Recipient’s username" aria-describedby="button-addon2">
-                        <button type="button" id="searchBtn"><i class="bi bi-search"></i></button>
-                    </div>
+                <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
+                    <form id="searchForm" action="/board/search" method="get" class="d-flex align-items-center" style="max-width: 300px;">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-primary"></i>
+                            </span>
+                            <input id="searchInput" type="text" name="query" class="form-control border-start-0" style="background-color:white;">
+                        </div>
+                    </form>
+
                     <a class="btn btn-primary" href="/write" role="button">글쓰기</a>
                     <a class="btn btn-primary" href="/logout" role="button">로그아웃</a>
                 </div>

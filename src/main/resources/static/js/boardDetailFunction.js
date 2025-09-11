@@ -202,6 +202,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 지도 초기화
     // ---------------------------
     async function initMap(board) {
+        debugger;
         if (!board.pictureDtos || board.pictureDtos.length === 0) return;
 
         const map = new naver.maps.Map("map", {
@@ -217,7 +218,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         const markers = [];
         const bounds = new naver.maps.LatLngBounds(); // 전체 경로 bounds
 
+        console.log("board : ", board);
+        console.log("board.pictureDtos : ", board.pictureDtos);
+
         for (let i = 0; i < board.pictureDtos.length; i++) {
+            
             const dto = board.pictureDtos[i];
             const marker = new naver.maps.Marker({
                 position: new naver.maps.LatLng(dto.latitude, dto.longitude),
@@ -267,6 +272,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // Polyline
+        debugger;
+        console.log("board : ", board);
         for (let i = 0; i < board.pictureDtos.length - 1; i++) {
             const start = board.pictureDtos[i];
             const goal = board.pictureDtos[i + 1];

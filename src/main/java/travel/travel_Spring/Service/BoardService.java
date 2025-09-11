@@ -2,6 +2,9 @@ package travel.travel_Spring.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -247,14 +250,18 @@ public class BoardService {
     }
 
     @Transactional(readOnly = true)
-    public List<BoardDto> searchBoards(String query, String currentUserEmail) {
+    public Page<BoardDto> searchBoards(String query, String currentUserEmail, Pageable pageable) {
         // 1. 검색어를 사용해 제목 or 내용으로 게시글 찾기
         List<Board> boards = boardRepository.findByTitleContainingOrContentContaining(query, query);
 
-        // 2. 게시글 리스트를 BoardDto로 변환
-        return boards.stream()
+        // List<Board> 를 Page<BoardDto>로 변환하는 로직
+        int start = (int)pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), boards.size());
+        List<Board> pageContent = boards.subList(start, end);
+
+        List<BoardDto> dtoList = pageContent.stream()
                 .map(b -> {
-                    // BoardDto 생성에 필요한 데이터 가공
+                    // 기존 DTO 변환 로직
                     List<String> pictures = b.getBoardPictures().stream()
                             .map(BoardPicture::getPictureUrl)
                             .collect(Collectors.toList());
@@ -263,7 +270,6 @@ public class BoardService {
                             .map(c -> new CommentResponseDto(c, currentUserEmail))
                             .collect(Collectors.toList());
 
-                    // 3. BoardDto 객체 생성 및 반환
                     return new BoardDto(
                             b.getId(),
                             b.getTitle(),
@@ -278,7 +284,10 @@ public class BoardService {
                             null, // pictureDtos
                             comments
                     );
-                }).collect(Collectors.toList());
+                })
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtoList, pageable, boards.size());
     }
 
     @Transactional(readOnly = true)

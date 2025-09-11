@@ -159,7 +159,7 @@ public class BoardApiController {
                 .sorted(Comparator.comparing(
                         BoardPicture::getOrderIndex,
                         Comparator.nullsLast(Integer::compareTo))) // 순서 기준 정렬, null이면 마지막으로 보냄.
-                .map(bp -> new BoardPictureDto(bp.getFilename(), bp.getLatitude(), bp.getLongitude(), bp.getOrderIndex()))
+                .map(bp -> new BoardPictureDto(bp.getFilename(), bp.getLatitude(), bp.getLongitude()))
                 .collect(Collectors.toList());
 
         // 사진 URL 리스트 세팅

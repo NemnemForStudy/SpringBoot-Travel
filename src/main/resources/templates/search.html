@@ -88,8 +88,9 @@
         </form>
     </div>
 
-    <div id="board-list" class="row row-cols-1 row-cols-md-3 g-4" style="margin: 30px; width: 100%;">
-        <div th:each="board : ${boards}" class="col-12 col-md-6 col-lg-4 mb-3">
+    <div class="container my-5">
+    <div id="board-list" class="row row-cols-2 g-4" style="margin: 30px; width: 100%;">
+        <div th:each="board : ${boards}" class="col">
             <div class="card h-100" th:onclick="|location.href='/board/boardDetailForm/' + ${board.id}|">
                 <div class="d-flex">
                     <div class="image-box me-3">
@@ -113,6 +114,23 @@
             <p class="text-center">검색 결과가 없습니다.</p>
         </div>
     </div>
+    </div>
+    
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/board/search(query=${query}, page=${currentPage - 1})}">Previous</a>
+            </li>
+            
+            <li class="page-item" th:each="pageNumber : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${pageNumber == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/board/search(query=${query}, page=${pageNumber})}" th:text="${pageNumber + 1}">1</a>
+            </li>
+            
+            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/board/search(query=${query}, page=${currentPage + 1})}">Next</a>
+            </li>
+        </ul>
+    </nav>
 
     <nav aria-label="Page navigation example">
         <ul class="pagination justify-content-center"></ul>

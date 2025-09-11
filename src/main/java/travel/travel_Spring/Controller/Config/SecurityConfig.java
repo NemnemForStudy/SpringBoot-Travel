@@ -43,7 +43,7 @@ public class SecurityConfig {
             // 로그인 여부와 상관없이 도메인에 진입할 수 있게 지정해줘야 함.
             // Image를 지정해줘야 로그인하지 않을 때도 이미지가 나오게 된다.
             // board를 추가해서 postman 할 수 있게 해줌.
-            .antMatchers("/", "/loginView", "/css/**", "/js/**", "/index", "/joinMembership", "/Image/**", "/api/**", "/board/**", "/uploads/**").permitAll() // 이 부분 중요
+            .antMatchers("/", "/loginView", "/css/**", "/js/**", "/index", "/joinMembership", "/Image/**", "/api/**", "/board/**", "/uploads/**", "/api/naver/direction").permitAll() // 이 부분 중요
             .anyRequest().authenticated()
         .and()
             .formLogin()

@@ -22,4 +22,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     void updateAuthorByAuthor(@Param("oldAuthor") String oldAuthor, @Param("newAuthor") String newAuthor);
 
     List<Board> findByTitleContaining(String title);
+
+    // 제목 or 내용에 특정 문자영 포함된 게시글 찾음.
+    List<Board> findByTitleContainingOrContentContaining(String title, String content);
 }

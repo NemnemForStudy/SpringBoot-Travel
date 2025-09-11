@@ -3,6 +3,7 @@ package travel.travel_Spring.Controller.board;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -158,7 +159,7 @@ public class BoardApiController {
                 .sorted(Comparator.comparing(
                         BoardPicture::getOrderIndex,
                         Comparator.nullsLast(Integer::compareTo))) // 순서 기준 정렬, null이면 마지막으로 보냄.
-                .map(bp -> new BoardPictureDto(bp.getFilename(), bp.getLatitude(), bp.getLongitude(), bp.getOrderIndex()))
+                .map(bp -> new BoardPictureDto(bp.getFilename(), bp.getLatitude(), bp.getLongitude()))
                 .collect(Collectors.toList());
 
         // 사진 URL 리스트 세팅
@@ -334,14 +335,10 @@ public class BoardApiController {
         return ResponseEntity.ok(updateComment);
     }
 
-//    // 검색기능
-//    @GetMapping("/search")
-//    @ResponseBody
-//    public List<BoardDto> searchBoard(@RequestParam("query") String query) {
-//        List<Board> boards = boardService.searchByContent(query);
-//        return boardRepository.findByContentContaining(query)
-//                .stream()
-//                .map(board -> new BoardDto(board))
-//                .toList();
-//    }
+    // 검색기능
+    @GetMapping("/api/allBoards")
+    @ResponseBody // DTO 리스트를 JSON 형태로 바로 반환
+    public List<BoardDto> getAllBoardsForSearch() {
+        return boardService.getAllBoardsForSearch();
+    }
 }

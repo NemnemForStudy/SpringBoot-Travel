@@ -48,11 +48,9 @@
        th:value="${board != null} ? ${board.title} : 'test'" placeholder="제목을 입력해주세요."/>
 <!--    파일 업로드    -->
         <div class="mb-3">
-          <label id="fileLabel"style="margin-top: 2px" for="formFileMultiple" class="form-label">
-            사진 첨부
-          </label>
-          <input class="form-control d-none" type="file" id="formFileMultiple" multiple>
-          <button type="button" class="btn btn-primary" id="fileSelectBtn">사진 선택</button>
+          <label id="fileLabel"style="margin-top: 2px" for="formFileMultiple" class="form-label"></label>
+          <input type="file" id="fileInput" multiple style="display: none;">
+          <button type="button" id="fileSelectBtn">사진 선택</button>
           <div id="fileDisplay" class="form-text">파일이 선택되지 않았습니다.</div>
         </div>
 
@@ -63,9 +61,6 @@
         </div>
       </div>
 
-      <!-- 숨겨진 파일 업로드 input -->
-      <input type="file" id="profileUpload" accept="image/*" style="display: none;" />
-
       <div class="d-flex justify-content-end">
         <button id="saveBtn" class="btn btn-primary" type="submit">등록</button>
       </div>
@@ -73,10 +68,11 @@
   </div>
   <div>
 <!--  사진 미리보기  -->
-    <div style="margin-top: 100px;">
-      <label style="margin-left: 20px;">여행에서 사진을 찍은 순서대로 올려주세요</label>
+    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 100px;">
+      <label>여행에서 사진을 찍은 순서대로 Drag & Drop 해주세요</label>
       <div id="preview"
-           style="width: 350px; height: 350px; border: 2px solid blue; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 5px; padding: 5px;">
+           style="width: 355px; height: 350px; border: 2px solid blue; 
+                  overflow-y: auto; flex-wrap: wrap; gap: 5px; padding: 5px;">
       </div>
     </div>
 
@@ -84,6 +80,7 @@
 </div>
 
 <script src="/js/write.js"></script>
+<!-- <script src="/js/fileUpload.js"></script> -->
 <!-- <script src="/js/imgInputFunction.js"></script> -->
 <!-- exif-js CDN 사진 위도, 경도 얻기 위해 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>

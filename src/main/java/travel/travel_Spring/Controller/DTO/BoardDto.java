@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -96,6 +97,30 @@ public class BoardDto {
         this.title = board.getTitle();
         this.content = board.getContent();
         this.createTimeAgo = getTimeAgo(board.getCreateTime());
+
+        if(board.getPictures() != null) {
+            this.pictureDtos = board.getPictures().stream()
+                    .map(p -> new BoardPictureDto(p.getFilename(), p.getLatitude(), p.getLongitude()))
+                    .collect(Collectors.toList());
+        }
+    }
+
+    // 검색 전용으로 새롭게 추가할 생성자 (댓글 제외)
+    public BoardDto(long id, String title, String content, String email, List<String> pictures,
+                    LocalDateTime createTime, LocalDateTime updateTime, int likeCount,
+                    List<String> selectedDropdownOptions) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.email = email;
+        this.pictures = pictures;
+        this.createTimeAgo = getTimeAgo(createTime);
+        this.updateTime = updateTime;
+        this.likeCount = likeCount;
+        this.selectedDropdownOptions = selectedDropdownOptions;
+        // Comment 관련 필드는 초기화하지 않음
+        this.commentList = null;
+        this.pictureDtos = null; // 필요 없다면 이것도 null 처리 가능
     }
 
     private String getTimeAgo(LocalDateTime createTime) {

@@ -2,6 +2,9 @@ package travel.travel_Spring.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -223,5 +226,93 @@ public class BoardService {
 
     public List<Board> searchByTitle(String query) {
         return boardRepository.findByTitleContaining(query);
+    }
+
+    public List<BoardDto> searchByTitleAsDto(String query) {
+        List<Board> boards = boardRepository.findByTitleContaining(query);
+        return boards.stream().map(board -> {
+            List<String> pictureUrls = board.getPictures().stream()
+                    .map(BoardPicture::getPictureUrl)
+                    .collect(Collectors.toList());
+
+            long commentCount = commentRepository.countByBoardId(board.getId());
+
+            BoardDto dto = new BoardDto();
+            dto.setId(board.getId());
+            dto.setTitle(board.getTitle());
+            dto.setContent(board.getContent());
+            dto.setPictures(pictureUrls);
+            dto.setLikeCount(board.getLikeCount());
+            dto.setCommentCount(commentCount);
+            dto.setCreateTimeAgo(board.getCreateTimeAgo());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BoardDto> searchBoards(String query, String currentUserEmail, Pageable pageable) {
+        // 1. 검색어를 사용해 제목 or 내용으로 게시글 찾기
+        List<Board> boards = boardRepository.findByTitleContainingOrContentContaining(query, query);
+
+        // List<Board> 를 Page<BoardDto>로 변환하는 로직
+        int start = (int)pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), boards.size());
+        List<Board> pageContent = boards.subList(start, end);
+
+        List<BoardDto> dtoList = pageContent.stream()
+                .map(b -> {
+                    // 기존 DTO 변환 로직
+                    List<String> pictures = b.getBoardPictures().stream()
+                            .map(BoardPicture::getPictureUrl)
+                            .collect(Collectors.toList());
+
+                    List<CommentResponseDto> comments = commentService.getCommentByBoardId(b.getId()).stream()
+                            .map(c -> new CommentResponseDto(c, currentUserEmail))
+                            .collect(Collectors.toList());
+
+                    return new BoardDto(
+                            b.getId(),
+                            b.getTitle(),
+                            b.getContent(),
+                            b.getEmail(),
+                            pictures,
+                            b.getCreateTime(),
+                            b.getUpdateTime(),
+                            b.getLikeCount(),
+                            b.getSelectedDropdownOptions(),
+                            // 검색 결과에도 댓글 포함하려면 이 필드 사용
+                            null, // pictureDtos
+                            comments
+                    );
+                })
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtoList, pageable, boards.size());
+    }
+
+    @Transactional(readOnly = true)
+    public List<BoardDto> getAllBoardsForSearch() {
+        // 최신순으로 게시글 가져옴
+        List<Board> boards = boardRepository.findAll(Sort.by(Sort.Direction.DESC, "createTime"));
+
+        // 게시글 제목, 내용, 사진 등 검색에 필요한 최소한 데이터만 담아 반환
+        return boards.stream()
+                .map(b -> {
+                    List<String> pictures = b.getBoardPictures().stream()
+                            .map(BoardPicture::getPictureUrl)
+                            .collect(Collectors.toList());
+
+                    return new BoardDto(
+                            b.getId(),
+                            b.getTitle(),
+                            b.getContent(),
+                            b.getEmail(),
+                            pictures,
+                            b.getCreateTime(),
+                            b.getUpdateTime(),
+                            b.getLikeCount(),
+                            b.getSelectedDropdownOptions()
+                    );
+                }).collect(Collectors.toList());
     }
 }

@@ -15,7 +15,6 @@ import org.springframework.web.client.RestTemplate;
 public class BoardNaverController {
     private final RestTemplate restTemplate = new RestTemplate();
 
-
     @GetMapping("/direction")
     public ResponseEntity<?> getRoute(
             @RequestParam double startLat,

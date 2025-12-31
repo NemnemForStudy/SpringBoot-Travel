@@ -5,52 +5,53 @@ function getQueryParam(name) {
 }
 
 // 검색 결과를 화면에 렌더링하는 함수
+// 검색 결과를 화면에 렌더링하는 함수
 function renderSearchResults(boards) {
-    const boardList = document.getElementById("board-list");
-    boardList.innerHTML = "";
+    const boardList = document.getElementById("board-list");
+    boardList.innerHTML = "";
 
-    // 게시글이 없으면 "검색 결과 없음" 메시지 표시
-    if (boards.length === 0) {
-        boardList.innerHTML = `<p class="text-center">검색 결과가 없습니다.</p>`;
-        return;
-    }
+    // 게시글이 없으면 "검색 결과 없음" 메시지 표시
+    if (boards.length === 0) {
+        boardList.innerHTML = `
+            <div class="col-12 py-5 text-center bg-white rounded-3 shadow-sm">
+                <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+                <p class="text-muted">검색 결과가 없습니다.</p>
+            </div>`;
+        return;
+    }
 
-    boards.forEach(board => {
-    console.log("board : ", board);
-        const col = document.createElement("div");
-        col.className = "col-12 col-md-6 col-lg-4 mb-3";
+    boards.forEach(board => {
+        const col = document.createElement("div");
+        // 넓은 화면에서 사진이 커지는걸 막기 위해 col-12로 한 줄에 하나씩 나오게 고정합니다.
+        col.className = "col-12 mb-3";
 
-        const commentCount = board.commentList ? board.commentList.length : 0;
+        const commentCount = board.commentList ? board.commentList.length : 0;
 
-        col.innerHTML = `
-            <div class="card h-100">
-                <div class="d-flex">
-                    <div class="image-box me-3">
-                        <img src="${board.pictures && board.pictures.length > 0 ? board.pictures[0] : '/images/default.jpg'}">
-                    </div>
-                    <div class="card-body p-0">
-                        <h5 class="card-title">${board.title}</h5>
-                        <p class="card-text">${board.content}</p>
-                        <div class="d-flex">
-                            <small class="text-muted">작성일: ${board.createTimeAgo}</small>
-                            <i style="margin-left: 5px;" class="bi bi-heart-fill"></i>
-                            <span class="ms-1 like-count">${board.likeCount}</span>
-                            <i style="margin-left: 5px;" class="bi bi-chat-square"></i>
-                            <span class="ms-1 comment-count">${commentCount}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        // 핵심: CSS에서 정의한 클래스명(board-card, card-content 등)으로 교체
+        col.innerHTML = `
+            <div class="board-card">
+                <div class="image-box">
+                    <img src="${board.pictures && board.pictures.length > 0 ? board.pictures[0] : '/images/default.jpg'}" alt="여행지 이미지">
+                </div>
+                <div class="card-content">
+                    <h5 class="card-title">${board.title}</h5>
+                    <p class="card-excerpt">${board.content}</p>
+                    <div class="card-meta">
+                        <span><i class="bi bi-clock me-1"></i>${board.createTimeAgo}</span>
+                        <span><i class="bi bi-heart-fill text-danger me-1"></i>${board.likeCount}</span>
+                        <span><i class="bi bi-chat-dots me-1"></i>${commentCount}</span>
+                    </div>
+                </div>
+            </div>
+        `;
 
-        col.addEventListener("click", () => {
-            window.location.href = `/board/boardDetailForm/${board.id}`;
-        });
+        col.addEventListener("click", () => {
+            window.location.href = `/board/boardDetailForm/${board.id}`;
+        });
 
-        boardList.appendChild(col);
-    });
+        boardList.appendChild(col);
+    });
 }
-
 
 // 검색 기능 초기화 함수
 // function initializeSearch() {

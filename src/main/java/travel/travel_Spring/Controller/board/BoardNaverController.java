@@ -22,12 +22,12 @@ public class BoardNaverController {
             @RequestParam double goalLat,
             @RequestParam double goalLng
     ) {
-        String clientId = "ggfedkbq9r";
-        String clientSecret = "fwrnsQex6EUvvZ3DkDPzT6lpQeK5zexm65zSSIEa";
+        String clientId = "tqts1rasw6";
+        String clientSecret = "m6RLgw5stLLkLKTC6VUJgCPXMiBC3gQnIROu07ut";
 
-        String url = String.format(
-            "https://maps.apigw.ntruss.com/map-direction-15/v1/driving?start=%f,%f&goal=%f,%f",
-            startLng, startLat, goalLng, goalLat
+        String url = String.format(java.util.Locale.ROOT,
+                "https://maps.apigw.ntruss.com/map-direction-15/v1/driving?start=%f,%f&goal=%f,%f&option=trafast",
+                startLng, startLat, goalLng, goalLat
         );
 
         HttpHeaders headers = new HttpHeaders();

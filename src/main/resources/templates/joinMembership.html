@@ -1,118 +1,200 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
-<!-- head 태그는 브라우저가 페이지를 어떻게 표시할지에 대한 정보를 넣는 곳이다. -->
 <head>
     <meta charset="UTF-8">
-    <title>로그인</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ModuTrip | 회원가입</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <style>
-        .dropdown-menu {
-            max-height: 200px;
-            overflow: auto;
+        :root {
+            --primary-color: #0d6efd;
+            --bg-gray: #f0f2f5;
         }
-        
-        #checkEmailBtn,
-        #sendCodeBtn {
-            min-width: 150px; /* 원하면 값 조절 가능 */
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-gray);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 네비게이션 바 */
+        .navbar {
+            background-color: white !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 0.8rem 0;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        /* 회원가입 카드 박스 */
+        .signup-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 15px;
+        }
+
+        .signup-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 500px;
+            padding: 3rem;
+        }
+
+        .signup-title {
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* 폼 스타일링 */
+        .form-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            padding: 0.7rem 1rem;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+        }
+
+        /* 버튼 스타일 */
+        .btn-action {
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 0.7rem 1.2rem;
+            transition: all 0.2s;
+        }
+
+        .btn-signup {
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 15px;
+            padding: 1rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* 유효성 메시지 */
+        .validation-msg {
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        /* 타이머 */
+        #timer {
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: block;
+            margin-top: 5px;
         }
     </style>
-
-    <!--    Bootstrap의 css 스타일을 불러오는 코드. Bootstrap이 제공하는 디자인을 사용하려면 필요함. 모던하고 반응형으로 만들어줌.    -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<header class="logo">
-    <div style="display: flex; justify-content: center; gap: 100px; margin: 50px;">
-        <div style="text-align: center;">
-            <a href="/">
-                <img src="/Image/icon_home.png" alt="icon_home" style="height: 100px; width: 100px;"/>
-            </a>
-            <p>홈페이지 화면으로!</p>
-        </div>
-        <div style="text-align: center;">
-            <a href="/loginView">
-                <img src="/Image/icon_login.png" alt="icon_login" style="height: 100px; width: 100px;"/>
-            </a>
-            <p>로그인 화면으로!</p>
-        </div>
-    </div>
-</header>
-
-<!-- 실제로 사용자에게 보이는건 body 태그에 들어간다. -->
 <body>
-<div style="margin: 0 500px 0;">
-    <!-- return validateForm으로 생년월일 올바르게  -->
-    <form id="joinForm" th:action="@{/joinMembership}" method="post" onsubmit="return validateForm(event)">
-
-    <div class="mb-3">
-        <label for="emailInput" class="form-label">이메일</label>
-<!--    인풋과 버튼을 한 줄로 붙여주는 Bootstrap 클래스    -->
-        <!-- 한 줄로 두 개의 input-group을 정렬 -->
-    <div class="input-group mb-2">
-        <input type="email" class="form-control" name="email" id="emailInput" placeholder="your email@xxx.com">
-        <button type="button" class="btn btn-primary" id="checkEmailBtn">이메일 중복 확인</button>
-    </div>
-    <div id="emailValid" class="text-success mt-1" style="display: none;">이메일을 사용할 수 있습니다!</div>
-    <div id="emailInValid" class="text-danger mt-1" style="display: none;">이미 존재하는 이메일입니다.</div>
-    <div class="input-group mb-2">
-        <input type="text" class="form-control" name="emailCode" id="emailCode" placeholder="코드 입력">
-        <button type="button" class="btn btn-primary" id="sendCodeBtn">코드 전송</button>
-    </div>
-    <small id="timer" style="color: red;"></small>
-    <div id="resultMessage"></div>
-    </div>
-    <div class="mb-3">
-        <label for="passwordInput" class="form-label">비밀번호</label>
-        <input type="password" class="form-control" name="password" id="passwordInput" placeholder="비밀번호를 입력해주세요">
-        <div id="passwordLengthCheck" class="text-danger mt-1" style="display: none;">비밀번호는 8자리 이상이어야 합니다.</div>
-    </div>
-    <div class="mb-3">
-        <label for="passwordCheck" class="form-label">비밀번호 확인</label>
-        <input type="password" class="form-control" name="passwordCheck" id="passwordCheck" placeholder="비밀번호를 재입력">
-        <div id="passwordMismatchMsgTrue" class="text-success mt-1" style="display: none;">비밀번호가 일치합니다.</div>
-        <div id="passwordMismatchMsgFalse" class="text-danger mt-1" style="display: none;">비밀번호가 일치하지 않습니다.</div>
-    </div>
-
-    <div class="mb-3">
-        <label for="nicknameInput" class="form-label">닉네임</label>
-        <input type="text" class="form-control" name="nickname" id="nicknameInput" placeholder="닉네임을 입력해주세요.">
-        <div id="nicknameCheck" class="text-danger mt-1" style="display: none;">닉네임이 중복입니다.</div>
-    </div>
-    <div class="mb-3">
-        <label for="phoneNumber" class="form-label">전화번호</label>
-        <input type="tel" class="form-control" name="phoneNumber" id="phoneNumber" placeholder="ex) 010-1111-1111">
-        <div id="phoneNumberCheck" class="text-danger mt-1" style="display: none">전화번호 양식이 다릅니다. ex) 010-1111-1111</div>
-    </div>
-
-    <!-- 생년월일 입력 -->
-    <div class="mb-3">
-        <label class="form-label">생년월일</label>
-        <div class="d-flex gap-2">
-            <!-- 연도 선택 -->
-            <!-- 값 선택 위해서는 select -->
-            <select class="form-select" name="birthYear">
-                <option value="">년도</option>
-                <option th:each="year : ${years}" th:value="${year}" th:text="${year}"></option>
-            </select>
-            
-            <select class="form-select" name="birthMonth">
-                <option value="">월</option>
-                <option th:each="month : ${months}" th:value="${month}" th:text="${month}"></option>
-            </select>
-            
-            <select class="form-select" name="birthDay">
-                <option value="">일</option>
-                <option th:each="day : ${days}" th:value="${day}" th:text="${day}"></option>
-            </select>
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">ModuTrip</a>
+        <div class="ms-auto">
+            <a class="btn btn-light rounded-pill px-4" href="/loginView">로그인으로</a>
         </div>
     </div>
+</nav>
 
-    <!-- 회원가입 버튼 | btn btn-primary는 파란색 기본 버튼 스타일을 적용해줌.(주요 액션 버튼) -->
-    <div class="mb-3">
-        <button type="submit" class="btn btn-primary" style="width: 100%" id="signupBtn">회원가입</button>
+<div class="signup-container">
+    <div class="signup-card">
+        <h2 class="signup-title">회원가입</h2>
+
+        <form id="joinForm" th:action="@{/joinMembership}" method="post" onsubmit="return validateForm(event)">
+
+            <div class="mb-4">
+                <label for="emailInput" class="form-label">이메일 계정</label>
+                <div class="input-group mb-2">
+                    <input type="email" class="form-control" name="email" id="emailInput" placeholder="name@example.com">
+                    <button type="button" class="btn btn-outline-primary btn-action" id="checkEmailBtn">중복 확인</button>
+                </div>
+                <div id="emailValid" class="validation-msg text-success" style="display: none;">사용 가능한 이메일입니다.</div>
+                <div id="emailInValid" class="validation-msg text-danger" style="display: none;">이미 가입된 이메일입니다.</div>
+
+                <div class="input-group mt-3">
+                    <input type="text" class="form-control" name="emailCode" id="emailCode" placeholder="인증코드 6자리">
+                    <button type="button" class="btn btn-primary btn-action" id="sendCodeBtn">코드 전송</button>
+                </div>
+                <small id="timer" class="text-danger"></small>
+                <div id="resultMessage" class="validation-msg"></div>
+            </div>
+
+            <div class="mb-3">
+                <label for="passwordInput" class="form-label">비밀번호</label>
+                <input type="password" class="form-control" name="password" id="passwordInput" placeholder="8자리 이상 입력">
+                <div id="passwordLengthCheck" class="validation-msg text-danger" style="display: none;">비밀번호는 8자리 이상이어야 합니다.</div>
+            </div>
+
+            <div class="mb-4">
+                <label for="passwordCheck" class="form-label">비밀번호 확인</label>
+                <input type="password" class="form-control" id="passwordCheck" placeholder="비밀번호 재입력">
+                <div id="passwordMismatchMsgTrue" class="validation-msg text-success" style="display: none;">비밀번호가 일치합니다.</div>
+                <div id="passwordMismatchMsgFalse" class="validation-msg text-danger" style="display: none;">비밀번호가 일치하지 않습니다.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="nicknameInput" class="form-label">닉네임</label>
+                <input type="text" class="form-control" name="nickname" id="nicknameInput" placeholder="활동할 이름을 정해주세요">
+                <div id="nicknameCheck" class="validation-msg text-danger" style="display: none;">이미 사용 중인 닉네임입니다.</div>
+            </div>
+
+            <div class="mb-4">
+                <label for="phoneNumber" class="form-label">전화번호</label>
+                <input type="tel" class="form-control" name="phoneNumber" id="phoneNumber" placeholder="010-0000-0000">
+                <div id="phoneNumberCheck" class="validation-msg text-danger" style="display: none">올바른 형식이 아닙니다. (예: 010-1234-5678)</div>
+            </div>
+
+            <div class="mb-5">
+                <label class="form-label">생년월일</label>
+                <div class="d-flex gap-2">
+                    <select class="form-select" name="birthYear">
+                        <option value="">년</option>
+                        <option th:each="year : ${years}" th:value="${year}" th:text="${year}"></option>
+                    </select>
+                    <select class="form-select" name="birthMonth">
+                        <option value="">월</option>
+                        <option th:each="month : ${months}" th:value="${month}" th:text="${month}"></option>
+                    </select>
+                    <select class="form-select" name="birthDay">
+                        <option value="">일</option>
+                        <option th:each="day : ${days}" th:value="${day}" th:text="${day}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-signup w-100" id="signupBtn">가입 완료</button>
+        </form>
     </div>
-</form>
 </div>
 
 <script src="/js/passwordFunction.js"></script>
@@ -123,12 +205,6 @@
 <script src="/js/sendEmail.js"></script>
 <script src="/js/signup.js"></script>
 <script src="/js/joinMembershipCheck.js"></script>
-
-<!-- <script th:if="${errorMessage != null}">
-    alert([[${errorMessage}]]);
-</script> -->
-
-<!-- Bootstrap JS CDN (반응형 토글 버튼 등 작동하려면 필요함) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

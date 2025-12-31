@@ -202,7 +202,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 지도 초기화
     // ---------------------------
     async function initMap(board) {
-        debugger;
         if (!board.pictureDtos || board.pictureDtos.length === 0) return;
 
         const map = new naver.maps.Map("map", {
@@ -283,6 +282,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     `/api/naver/direction?startLat=${start.latitude}&startLng=${start.longitude}&goalLat=${goal.latitude}&goalLng=${goal.longitude}`
                 );
                 const dirData = await dirRes.json();
+                console.log("dirData : " + dirData);
                 
                 if (dirData.route && dirData.route.traoptimal && dirData.route.traoptimal.length > 0) {
                     const sections = dirData.route.traoptimal[0].section;
@@ -307,9 +307,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                     const minutes = Math.round((durationHours - hours) * 60);
 
                     // 경로(path) Polyline
+                    debugger;
                     const path = dirData.route.traoptimal[0].path
                         .filter(c => Array.isArray(c) && c.length === 2)
                         .map(c => new naver.maps.LatLng(c[1], c[0]));
+
+                    console.log("path : " + path);
 
                     if (path.length > 1) { // 최소 2개 이상이어야 Polyline 생성
                         new naver.maps.Polyline({

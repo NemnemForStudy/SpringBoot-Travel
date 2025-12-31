@@ -1,130 +1,225 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>제목은 미정. 여행 사이트</title>
-    
-        <!--    Bootstrap의 css 스타일을 불러오는 코드. Bootstrap이 제공하는 디자인을 사용하려면 필요함. 모던하고 반응형으로 만들어줌.    -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-        <!-- 햄버거 버튼 사용위해 있어야함. -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-        <style>
-            #profilePreview {
-                border-radius: 50%;  /* 원형으로 만듦 */
-                overflow: hidden;    /* 이미지가 부모 요소 밖으로 나가지 않게 함 */
-            }
-            #profilePreview img {
-                width: 100%;         /* 부모 요소에 맞게 이미지 크기 조정 */
-                height: 100%;        /* 부모 요소에 맞게 이미지 크기 조정 */
-                object-fit: cover;   /* 이미지 잘라내기 */
-            }
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ModuTrip | 마이페이지</title>
 
-            /* Profile details */
-            .profile-details {
-                font-size: 18px;
-            }
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-            .profile-details h4 {
-                margin-bottom: 10px;
-            }
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --bg-gray: #f0f2f5;
+        }
 
-            .profile-details p {
-                color: gray;
-            }
-        </style>
-    </head>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-gray);
+            color: #333;
+        }
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-        <!-- d-block : 인라인 요소를 block 으로 바꿔줌, text-center : 텍스트 가운데로 -->
-        <div class="container d-flex justify-content-center">
-            <a class="navbar-brand">마이페이지</a>
+        /* 네비게이션 바 일관성 유지 */
+        .navbar {
+            background-color: white !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+        }
+
+        /* 마이페이지 메인 카드 */
+        .profile-container {
+            max-width: 800px;
+            margin: 60px auto;
+        }
+
+        .profile-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* 프로필 이미지 영역 */
+        .profile-image-wrapper {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 2rem;
+        }
+
+        #profilePreview {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #profilePreview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 편집 아이콘 스타일 업그레이드 */
+        .edit-icon-badge {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #eee;
+        }
+        .edit-icon-badge:hover {
+            transform: scale(1.1);
+            color: var(--primary-color);
+        }
+
+        /* 유저 정보 텍스트 영역 */
+        .profile-info {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 2rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        .info-row:last-child { border-bottom: none; }
+
+        .info-label {
+            font-weight: 700;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .info-value {
+            font-weight: 500;
+            color: #1a1a1a;
+            font-size: 1.05rem;
+        }
+
+        /* 닉네임 입력창 커스텀 */
+        #nicknameInput {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 5px 10px;
+            outline: none;
+        }
+
+        /* 버튼 그룹 */
+        .btn-pill {
+            border-radius: 25px;
+            padding: 10px 30px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">ModuTrip</a>
+
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <a class="btn btn-light rounded-pill px-4" href="/">메인화면</a>
+            <a class="btn btn-outline-danger rounded-pill px-3" href="/logout">로그아웃</a>
+            <button class="btn btn-light rounded-circle" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight">
+                <i class="bi bi-list fs-4"></i>
+            </button>
         </div>
-        <div class="justify-content-md-end">
-            <a class="btn btn-primary" href="/" role="button">메인화면</a>
-        </div>
-        <div class="justify-content-md-end">
-            <a class="btn btn-primary" href="/logout" role="button">로그아웃</a>
-        </div>
-
-        <!-- 햄버거 버튼 -->
-        <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
-        aria-controls="offcanvasRight">
-    <span class="navbar-toggler-icon"></span>
-</button>
-
-<!-- 오프캔버스 오른쪽 메뉴 -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasRightLabel">메뉴</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
-                aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-        <ul class="list-group">
-            <li class="list-group-item"><a href="/">홈</a></li>
-            <li class="list-group-item"><a href="/travelDestination">여행지</a></li>
-            <li class="list-group-item"><a href="#">예약</a></li>
-        </ul>
-    </div>
-</div>
     </div>
 </nav>
 
-<body>
-<div style="display: flex; justify-content: center; align-items: center; gap: 80px; position: relative;">
-    <!-- 연필 아이콘 -->
-    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"
-         fill="currentColor" class="bi bi-pencil-square"
-         viewBox="0 0 16 16"
-         style="position: absolute; top: 20%; left: 45%; background: white; cursor: pointer;"
-         id="editIcon">
-        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-        <path fill-rule="evenodd"
-              d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-    </svg>
-
-    <!-- 이미지 미리보기 영역 -->
-    <div id="profilePreview" class="rounded-circle border border-secondary d-flex align-items-center justify-content-center"
-         style="width: 250px; height: 250px; margin: 100px; position: relative;">
-        <div style="pointer-events: none;">
-            <svg id="profileIcon" xmlns="http://www.w3.org/2000/svg"
-                 width="250" height="250" fill="gray"
-                 class="bi bi-person-circle" viewBox="0 0 16 16">
-                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
-                <path fill-rule="evenodd"
-                      d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8
-                     m8-7a7 7 0 0 0-5.468 11.37
-                     C3.242 11.226 4.805 10 8 10
-                     s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
-            </svg>
-        </div>
+<div class="offcanvas offcanvas-end border-0" tabindex="-1" id="offcanvasRight">
+    <div class="offcanvas-header border-bottom p-4">
+        <h5 class="fw-bold mb-0">메뉴</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
-
-    <!-- 숨겨진 파일 업로드 input -->
-    <input type="file" id="profileUpload" accept="image/*" style="display: none;" />
-
-    <!-- 오른쪽: 유저 정보 + 버튼 -->
-    <div style="display: flex; flex-direction: column; justify-content: space-between; height: 250px;">
-        <div class="profile-details" style="margin-top: 50px">
-            <h4>아이디 : <span th:text="${user.email}"></span></h4>
-            <h4 id="nicknameDisplay">닉네임 : <span id="nicknameValue" th:text="${user.nickname}"></span>
-                <input type="text" id="nicknameInput" style="display: none;"/>
-            </h4>
-            <h4>전화번호 : <span th:text="${user.phoneNumber}"></span></h4>
+    <div class="offcanvas-body">
+        <div class="list-group list-group-flush">
+            <a href="/" class="list-group-item list-group-item-action py-3 border-0"><i class="bi bi-house me-2"></i> 홈</a>
+            <a href="/travelDestination" class="list-group-item list-group-item-action py-3 border-0"><i class="bi bi-map me-2"></i> 여행지 둘러보기</a>
         </div>
-
-        <!-- 안쪽 요소를 오른쪽 끝으로 정렬할 때 사용하는 방법. -->
-        <div class="d-flex justify-content-end mt-3" style="gap: 10px;">
-            <button id="editBtn" class="btn btn-primary">수정</button>
-            <button id="saveBtn" class="btn btn-primary" style="display: none;">확인</button>
-        </div>
-        
     </div>
 </div>
+
+<div class="container profile-container">
+    <div class="profile-card">
+        <h3 class="fw-bold mb-5">마이페이지</h3>
+
+        <div class="profile-image-wrapper">
+            <div id="profilePreview">
+                <svg id="profileIcon" xmlns="http://www.w3.org/2000/svg" width="120" height="120" fill="#dee2e6" class="bi bi-person-circle" viewBox="0 0 16 16">
+                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+                </svg>
+            </div>
+            <div class="edit-icon-badge" id="editIcon">
+                <i class="bi bi-camera-fill fs-5"></i>
+            </div>
+            <input type="file" id="profileUpload" accept="image/*" style="display: none;" />
+        </div>
+
+        <div class="profile-info">
+            <div class="info-row">
+                <span class="info-label">이메일 계정</span>
+                <span class="info-value" th:text="${user.email}">user@email.com</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">닉네임</span>
+                <div class="d-flex align-items-center">
+                    <span id="nicknameValue" class="info-value" th:text="${user.nickname}">닉네임</span>
+                    <input type="text" id="nicknameInput" class="ms-2" style="display: none;"/>
+                </div>
+            </div>
+            <div class="info-row">
+                <span class="info-label">전화번호</span>
+                <span class="info-value" th:text="${user.phoneNumber}">010-0000-0000</span>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3">
+            <button id="editBtn" class="btn btn-primary btn-pill">정보 수정</button>
+            <button id="saveBtn" class="btn btn-success btn-pill" style="display: none;">변경 사항 저장</button>
+        </div>
+    </div>
+</div>
+
 <script src="/js/changeProfile.js"></script>
 <script src="/js/updateNickname.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

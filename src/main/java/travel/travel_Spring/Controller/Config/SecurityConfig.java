@@ -39,26 +39,37 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf().disable()
-            .authorizeRequests()
-            // 로그인 여부와 상관없이 도메인에 진입할 수 있게 지정해줘야 함.
-            // Image를 지정해줘야 로그인하지 않을 때도 이미지가 나오게 된다.
-            // board를 추가해서 postman 할 수 있게 해줌.
-            .antMatchers("/", "/loginView", "/css/**", "/js/**", "/index", "/joinMembership", "/Image/**", "/api/**", "/board/**", "/uploads/**", "/api/naver/direction").permitAll() // 이 부분 중요
-            .anyRequest().authenticated()
-        .and()
-            .formLogin()
-            .loginPage("/loginView")
-            .loginProcessingUrl("/login")
-            .defaultSuccessUrl("/", true)
-            .failureHandler(loginFailureHandler)
-            .failureUrl("/loginView?error=true")
-            .permitAll() // 여기도 authorizeRequests() 안에 있어야 함
-        .and()
-            .logout()
-            .logoutUrl("/logout")
-            .logoutSuccessUrl("/")
-            .invalidateHttpSession(true)
-            .deleteCookies("JSESSIONID");// 쿠키 삭제
+                .authorizeRequests()
+                .antMatchers(
+                        "/",
+                        "/loginView",
+                        "/css/**",
+                        "/js/**",
+                        "/index",
+                        "/joinMembership",
+                        "/Image/**",
+                        "/uploads/**",
+                        "/api/**",                           // 먼저 배치
+                        "/board/boardDetailForm/**",         // 상세페이지
+                        "/board/api/**",                     // board API
+                        "/board/**",                         // 마지막에 배치
+                        "/api/naver/direction"
+                ).permitAll()
+                .anyRequest().authenticated()
+                .and()
+                .formLogin()
+                .loginPage("/loginView")
+                .loginProcessingUrl("/login")
+                .defaultSuccessUrl("/", true)
+                .failureHandler(loginFailureHandler)
+                .failureUrl("/loginView?error=true")
+                .permitAll()
+                .and()
+                .logout()
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID");
 
         return http.build();
     }
@@ -79,7 +90,10 @@ public class SecurityConfig {
     // 로그인 된 사용자 닉네임 가져오는 방법
     public static String getCurrentNickname() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication != null && authentication.getPrincipal() instanceof LoginUserDetails) {
+        if(authentication != null
+                && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal())
+                && authentication.getPrincipal() instanceof LoginUserDetails) {
             LoginUserDetails loginUserDetails = (LoginUserDetails) authentication.getPrincipal();
             return loginUserDetails.getNickname();
         }
@@ -89,7 +103,13 @@ public class SecurityConfig {
     // 로그인 된 사용자 이메일 가져오기
     public static String getCurrentEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        LoginUserDetails loginUserDetails = (LoginUserDetails) authentication.getPrincipal();
-        return loginUserDetails.getEmail();
+        if(authentication != null
+                && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal())
+                && authentication.getPrincipal() instanceof LoginUserDetails) {
+            LoginUserDetails loginUserDetails = (LoginUserDetails) authentication.getPrincipal();
+            return loginUserDetails.getEmail();
+        }
+        return null;
     }
 }

@@ -4,136 +4,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>여행 사이트</title>
+    <title>ModuTrip | 여행의 모든 순간</title>
 
-    <!-- Bootstrap CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        .card-img {
-            margin: 30px 30px 30px;
-            width: 300px;
-            height: 300px;
-            object-fit: contain;
+        :root {
+            --primary-color: #0d6efd;
+            --main-bg: #f0f2f5; /* 배경색을 약간 어둡게 해서 카드와 대비를 줌 */
+            --card-bg: #ffffff;
         }
 
-        /* 검색창 스타일 */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--main-bg);
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 네비게이션 바 */
+        .navbar {
+            background-color: white !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 0.8rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        /* 검색창 */
+        .search-group {
+            background: #f1f3f5;
+            border-radius: 25px;
+            padding: 5px 18px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .search-group:focus-within {
+            background: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+        }
+
         .search-input {
-            display: flex;
-            align-items: center;
-            background-color: white;
-            border-radius: 0.25rem;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            font-size: 0.95rem;
+        }
+
+        /* 메인 캐러셀 (Hero Section) */
+        #carouselCaptions {
+            border-radius: 24px;
             overflow: hidden;
-            border: 1px solid #ced4da;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            max-width: 1100px;
+            margin-top: 2rem !important;
         }
 
-        .search-input i {
-            color: white; /* 아이콘 흰색으로 */
-            margin-right: 5px;
+        /* 캐러셀 높이 고정 및 하단 여백 제거 */
+        #carouselCaptions .carousel-item {
+            height: 450px; /* 높이를 적절히 고정 */
+            background-color: #e9ecef;
         }
 
-        .search-input input {
+        #carouselCaptions .carousel-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 상단 메인은 꽉 차게 보여주는 것이 훨씬 예쁩니다 */
+        }
+
+        /* 섹션 타이틀 */
+        .section-title {
+            font-weight: 700;
+            margin: 4rem 0 2rem;
+            text-align: center;
+            font-size: 1.75rem;
+        }
+
+        /* 카드 컨테이너 여백 */
+        #top3CardsContainer {
+            padding-bottom: 3rem;
+        }
+
+        /* 카드 디자인 */
+        #top3CardsContainer .card {
             border: none;
-            outline: none;
-            flex: 1 1 auto;
-            padding: 5px 10px;
+            border-radius: 20px;
+            background-color: var(--card-bg);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06); /* 부드러운 그림자 */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: hidden;
+            height: 100%;
         }
 
-        /* 오른쪽 버튼 그룹 */
-        .navbar-buttons {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        #top3CardsContainer .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+        }
+
+        /* 카드 이미지 (전체 노출 설정) */
+        .card-img-top {
+            height: 220px;
+            width: 100%;
+            object-fit: contain; /* 이미지가 잘리지 않고 전체 다 보이게 설정 */
+            background-color: #ffffff; /* 이미지 여백 시 깔끔하게 흰색 배경 */
+            padding: 10px; /* 이미지 주변에 살짝 여백을 줘서 더 깔끔하게 함 */
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            border-top: 1px solid #f1f3f5;
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 버튼 스타일 */
+        .btn-primary {
+            font-weight: 500;
+            border-radius: 25px;
+        }
+
+        .btn-light {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+
+        /* 오프캔버스 메뉴 */
+        .offcanvas {
+            border-radius: 24px 0 0 24px;
         }
 
         @media (max-width: 768px) {
-            .search-input {
-                max-width: 150px;
+            #carouselCaptions .carousel-item {
+                height: 300px;
             }
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary position-relative">
-        <div class="container-fluid">
-    
-            <!-- 중앙 로고 -->
-            <a class="navbar-brand position-absolute start-50 translate-middle-x" href="/">여행 사이트</a>
-    
-            <!-- 오른쪽 요소: 로그인 상태와 비로그인 상태 -->
-            <div class="d-flex align-items-center ms-auto gap-2">
-                <!-- 로그인 상태 -->
-                <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
-                    <form id="searchForm" action="/board/search" method="get" class="d-flex align-items-center" style="max-width: 300px;">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="bi bi-search text-primary"></i>
-                            </span>
-                            <input id="searchInput" type="text" name="query" class="form-control border-start-0" style="background-color:white;">
-                        </div>
-                    </form>
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">ModuTrip</a>
 
-                    <!-- <div id="searchResults" class="row row-cols-1 row-cols-md-3" style="margin: 30px;"></div> -->
-    
-                    <a class="btn btn-primary" href="/myPage" role="button">마이 페이지</a>
-                    <a class="btn btn-primary" href="/logout" role="button">로그아웃</a>
-    
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
-                            aria-controls="offcanvasRight">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <div sec:authorize="isAuthenticated()">
+                <form id="searchForm" action="/board/search" method="get">
+                    <div class="search-group d-flex align-items-center">
+                        <i class="bi bi-search text-muted"></i>
+                        <input id="searchInput" type="text" name="query" class="form-control search-input" placeholder="어디로 떠나시나요?">
+                    </div>
+                </form>
+            </div>
+
+            <div class="d-none d-md-flex gap-2">
+                <div sec:authorize="isAnonymous()">
+                    <a class="btn btn-outline-primary rounded-pill px-4" href="/loginView">로그인</a>
+                    <a class="btn btn-primary rounded-pill px-4" href="/joinMembership">시작하기</a>
                 </div>
-    
-                <!-- 비로그인 상태 -->
-                <div sec:authorize="isAnonymous()" class="d-flex align-items-center gap-2">
-                    <a class="btn btn-primary" href="/loginView" role="button">로그인</a>
-                    <a class="btn btn-primary" href="/joinMembership" role="button">회원가입</a>
-    
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight"
-                            aria-controls="offcanvasRight">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
+                <div sec:authorize="isAuthenticated()" class="d-flex gap-2">
+                    <a class="btn btn-light rounded-pill px-3" href="/myPage">마이페이지</a>
+                    <a class="btn btn-outline-danger rounded-pill px-3" href="/logout">로그아웃</a>
                 </div>
             </div>
-    
-        </div>
-    
-        <!-- 오프캔버스 오른쪽 메뉴 -->
-        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-            <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="offcanvasRightLabel">메뉴</h5>
-                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
-                        aria-label="Close"></button>
-            </div>
-            <div class="offcanvas-body">
-                <ul class="list-group">
-                    <li class="list-group-item"><a href="/">홈</a></li>
-                    <li class="list-group-item"><a href="/travelDestination">여행지</a></li>
-                    <li class="list-group-item"><a href="#">예약</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-<!-- 캐러셀 -->
-<div id="carouselCaptions" class="carousel slide" data-bs-ride="carousel"
-     style="width: 600px; height: 400px; margin: 30px auto 0; color: white">
-    <div class="carousel-indicators"></div>
-    <div class="carousel-inner"></div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#carouselCaptions" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true" style="filter: invert(1)"></span>
-        <span class="visually-hidden">Previous</span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#carouselCaptions" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true" style="filter: invert(1)"></span>
-        <span class="visually-hidden">Next</span>
-    </button>
+            <button class="btn btn-light rounded-circle p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight">
+                <i class="bi bi-list fs-4" style="line-height: 1;"></i>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<main class="container">
+    <div id="carouselCaptions" class="carousel slide mx-auto" data-bs-ride="carousel">
+        <div class="carousel-indicators"></div>
+        <div class="carousel-inner">
+            <div class="carousel-item active d-flex align-items-center justify-content-center text-secondary">
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-2" role="status"></div>
+                    <p>여행 사진을 불러오는 중...</p>
+                </div>
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselCaptions" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselCaptions" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        </button>
+    </div>
+
+    <h3 class="section-title">지금 가장 인기 있는 여행지 🔥</h3>
+    <div id="top3CardsContainer" class="row row-cols-1 row-cols-md-3 g-4">
+    </div>
+</main>
+
+<div class="offcanvas offcanvas-end border-0 shadow" tabindex="-1" id="offcanvasRight">
+    <div class="offcanvas-header border-bottom p-4">
+        <h5 class="fw-bold mb-0">전체 메뉴</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <div class="list-group list-group-flush">
+            <a href="/" class="list-group-item list-group-item-action py-3 px-4 border-0">
+                <i class="bi bi-house-door me-3"></i> 홈
+            </a>
+            <a href="/board/travelDestination" class="list-group-item list-group-item-action py-3 px-4 border-0">
+                <i class="bi bi-map me-3"></i> 여행지 둘러보기
+            </a>
+            <a href="#" class="list-group-item list-group-item-action py-3 px-4 border-0">
+                <i class="bi bi-calendar-check me-3"></i> 내 예약 내역
+            </a>
+        </div>
+    </div>
 </div>
-
-<!-- 카드 컨테이너 -->
-<div id="top3CardsContainer" class="row row-cols-1 row-cols-md-3 g-4" style="margin: 30px; width: 100%; height: 500px;"></div>
 
 <script src="/js/indexFunction.js"></script>
 <script src="/js/searchFunction.js"></script>

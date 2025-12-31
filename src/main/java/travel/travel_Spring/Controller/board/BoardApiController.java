@@ -57,7 +57,13 @@ public class BoardApiController {
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
             @RequestParam(value = "latitude", required = false) List<String> latitudes,
             @RequestParam(value = "longitude", required = false) List<String> longitudes,
-            @RequestParam(value = "selectedDropdownOptions", required = false) List<String> selectedDropdownOptions) throws IOException {
+            @RequestParam(value = "selectedDropdownOptions", required = false) List<String> selectedDropdownOptions,
+            @AuthenticationPrincipal LoginUserDetails userDetails) throws IOException { // 추가
+
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+        }
 
         Board board = new Board();
         board.setTitle(title);
@@ -70,8 +76,8 @@ public class BoardApiController {
         board.setLikeCount(0);
         board.setSelectedDropdownOptions(selectedDropdownOptions);
 
-        if(title.isEmpty() || title == null) {
-            return ResponseEntity.badRequest().body("에러");
+        if(title == null || title.isEmpty()) { // 순서 변경
+            return ResponseEntity.badRequest().body("제목을 입력해주세요");
         }
 
         boardRepository.save(board);
@@ -107,9 +113,10 @@ public class BoardApiController {
         return ResponseEntity.ok(Map.of("success", true, "boardId", board.getId(), "pictures", pictureUrls));
     }
 
-    @GetMapping("/travelDestination")
+    @GetMapping("/api/travelDestination")
     public ResponseEntity<Map<String, Object>> getAllBoards(@AuthenticationPrincipal UserDetails userDetails) {
-        String currentUserEmail = userDetails.getUsername();
+        // 비로그인 유저 처리.
+        String currentUserEmail = (userDetails != null) ? userDetails.getUsername() : null;
         List<BoardDto> boards = boardService.getAllBoards(currentUserEmail); // 전체 게시글
         Map<String, Object> response = new HashMap<>();
         response.put("boards", boards);
@@ -128,23 +135,24 @@ public class BoardApiController {
 
     @GetMapping("/api/board/{boardId}/status")
     public ResponseEntity<Map<String, Object>> likeAndCommentAndEmailStatus(@PathVariable Long boardId, @AuthenticationPrincipal UserDetails userDetails) {
-        String currentUserEmail = userDetails.getUsername();
+        String currentUserEmail = (userDetails != null) ? userDetails.getUsername() : "";
 
         Board board = boardService.findById(boardId);
         String authorNickname = board.getAuthor();
         String authorEmail = userService.getEmailByNickname(authorNickname);
 
-        boolean liked = likeService.hasUserLiked(boardId, currentUserEmail);
+        boolean liked = (!currentUserEmail.isEmpty()) && likeService.hasUserLiked(boardId, currentUserEmail);
         long likeCount = likeService.getLikeCount(boardId);
         long commentCount = commentService.getCommentCount(boardId);
 
-        return ResponseEntity.ok(Map.of(
-                "liked", liked,
-                "likeCount", likeCount,
-                "commentCount", commentCount,
-                "currentUserEmail", currentUserEmail,
-                "authorEmail", authorEmail
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("liked", liked);
+        response.put("likeCount", likeCount);
+        response.put("commentCount", commentCount);
+        response.put("currentUserEmail", currentUserEmail);
+        response.put("authorEmail", authorEmail != null ? authorEmail : "");
+
+        return ResponseEntity.ok(response);
     }
 
     // 특정 게시글의 상세 정보, 현재 사용자가 좋아요 눌렀는지 상태 함께 제공.
@@ -152,45 +160,36 @@ public class BoardApiController {
     @GetMapping("/api/board/{boardId}")
     public ResponseEntity<BoardDto> getBoard(@PathVariable Long boardId, Principal principal) {
         Board board = boardService.findById(boardId);
-        boolean likedByUser = boardService.hasUserLiked(boardId, principal.getName());
 
-        // 좌표
+        // [수정] 비로그인 시 principal은 null이므로 안전하게 이름 추출
+        String currentName = (principal != null) ? principal.getName() : null;
+
+        // 좋아요 여부 확인 (이름이 있을 때만 서비스 호출)
+        boolean likedByUser = (currentName != null) && boardService.hasUserLiked(boardId, currentName);
+
+        // 사진/좌표 리스트 (기존 코드와 동일)
         List<BoardPictureDto> pictureDtos = board.getBoardPictures().stream()
-                .sorted(Comparator.comparing(
-                        BoardPicture::getOrderIndex,
-                        Comparator.nullsLast(Integer::compareTo))) // 순서 기준 정렬, null이면 마지막으로 보냄.
+                .sorted(Comparator.comparing(BoardPicture::getOrderIndex, Comparator.nullsLast(Integer::compareTo)))
                 .map(bp -> new BoardPictureDto(bp.getFilename(), bp.getLatitude(), bp.getLongitude()))
                 .collect(Collectors.toList());
 
-        // 사진 URL 리스트 세팅
         List<String> pictureUrls = board.getBoardPictures().stream()
-                .sorted(Comparator.comparing(
-                        BoardPicture::getOrderIndex,
-                        Comparator.nullsLast(Integer::compareTo)
-                ))
+                .sorted(Comparator.comparing(BoardPicture::getOrderIndex, Comparator.nullsLast(Integer::compareTo)))
                 .map(BoardPicture::getPictureUrl)
                 .collect(Collectors.toList());
 
+        // [수정] 댓글 리스트 변환 시 안전하게 추출한 currentName 전달
         List<CommentResponseDto> commentDtos = commentService.getCommentByBoardId(boardId).stream()
-                .map(comment -> new CommentResponseDto(comment, principal.getName()))
+                .map(comment -> new CommentResponseDto(comment, currentName))
                 .collect(Collectors.toList());
 
         BoardDto boardDto = new BoardDto(
-                board.getId(),
-                board.getTitle(),
-                board.getContent(),
-                board.getEmail(),
-                pictureUrls,
-                board.getCreateTime(),
-                board.getUpdateTime(),
-                board.getLikeCount(),
-                board.getSelectedDropdownOptions(),
-                pictureDtos,
-                commentDtos
+                board.getId(), board.getTitle(), board.getContent(), board.getEmail(),
+                pictureUrls, board.getCreateTime(), board.getUpdateTime(), board.getLikeCount(),
+                board.getSelectedDropdownOptions(), pictureDtos, commentDtos
         );
 
         boardDto.setLikedByCurrentUser(likedByUser);
-
         return ResponseEntity.ok(boardDto);
     }
 
@@ -276,9 +275,12 @@ public class BoardApiController {
     public ResponseEntity<?> addComment(@PathVariable Long boardId,
                                         @RequestBody CommentRequestDto request,
                                         @AuthenticationPrincipal LoginUserDetails userDetails) {
-        if(request.getContent().isEmpty() || request.getContent().trim().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "댓글을 입력해주세요"));
+        if(userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "로그인이 필요합니다."));
+        }
+
+        if(request.getContent() == null || request.getContent().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "댓글을 입력해주세요"));
         }
 
         Comment comment = commentService.addComment(boardId, userDetails.getEmail(), request.getContent());
@@ -296,7 +298,7 @@ public class BoardApiController {
     @GetMapping("/api/board/{boardId}/comments")
     public ResponseEntity<List<CommentResponseDto>> showCommentList(@PathVariable Long boardId, @AuthenticationPrincipal LoginUserDetails userDetails) {
         List<Comment> comments = commentService.getCommentByBoardId(boardId);
-        String currentEmail = userDetails.getEmail();
+        String currentEmail = (userDetails != null) ? userDetails.getEmail() : null;
 
         // Comment -> CommentResponseDto 변환
         List<CommentResponseDto> response = comments.stream()
@@ -309,16 +311,19 @@ public class BoardApiController {
     // 댓글 삭제
     @DeleteMapping("/comment/{commentId}")
     public ResponseEntity<?> deleteComment(@PathVariable Long commentId,
-                                         @AuthenticationPrincipal LoginUserDetails userDetails) {
-        // 댓글 가져오기
+                                           @AuthenticationPrincipal LoginUserDetails userDetails) {
+        // [추가] 로그인을 안 했다면 삭제 로직 자체를 실행하지 않음
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
         Comment comment = commentService.getCommentById(commentId);
 
-        // 현재 사용자와 작성자 비교
+        // [수정] userDetails가 null이 아님을 확인했으므로 이제 안전하게 getEmail() 호출 가능
         if(!comment.getEmail().equals(userDetails.getEmail())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("권한이 없습니다.");
         }
 
-        // 댓글 삭제
         commentService.deleteComment(commentId);
         return ResponseEntity.ok("삭제 성공");
     }

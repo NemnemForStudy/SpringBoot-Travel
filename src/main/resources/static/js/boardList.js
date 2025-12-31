@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 전체 게시글 fetch
     try {
-        const response = await fetch("/board/travelDestination");
+        const response = await fetch("/board/api/travelDestination");
         const data = await response.json();
         boards = data.boards || [];
 
@@ -18,47 +18,46 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.error("Error fetching boards:", error);
     }
 
-    function renderBoardList() {
-        boardList.innerHTML = "";
+function renderBoardList() {
+    boardList.innerHTML = "";
 
-        const start = (currentPage - 1) * postsPerPage;
-        const end = start + postsPerPage;
-        const pageBoards = boards.slice(start, end);
+    const start = (currentPage - 1) * postsPerPage;
+    const end = start + postsPerPage;
+    const pageBoards = boards.slice(start, end);
 
-        pageBoards.forEach(board => {
-            const cardCol = document.createElement("div");
-            const commentCount = board.commentList.length;
-            
-            cardCol.className = "col";
-            cardCol.innerHTML = `
-                <div class="card h-100">
-                    <div class="d-flex">
-                        <div class="image-box me-3">
-                            <img src="${board.pictures && board.pictures.length > 0 ? board.pictures[0] : '/images/default.jpg'}">
-                        </div>
-                        <div class="card-body p-0">
-                            <h5 class="card-title">${board.title}</h5>
-                            <p class="card-text">${board.content}</p>
-                            <div class="d-flex">
-                                <small class="text-muted">작성일: ${board.createTimeAgo}</small>
-                                <i style="margin-left: 5px;" class="bi bi-heart-fill"></i>
-                                <span class="ms-1 like-count">${board.likeCount}</span>
-                                <i style="margin-left: 5px;" class="bi bi-chat-square"></i>
-                                <span class="ms-1 comment-count">${commentCount}</span>
-                            </div>
-                        </div>
+    pageBoards.forEach(board => {
+        const cardCol = document.createElement("div");
+        const commentCount = board.commentList ? board.commentList.length : 0;
+
+        // col-12를 주어 한 줄에 하나씩 나오게 하거나,
+        // 기존 CSS의 .list-container 폭에 맞게 설정합니다.
+        cardCol.className = "col-12";
+
+        // 앞서 작성한 CSS 클래스명(.board-card, .card-content 등)과 일치시킵니다.
+        cardCol.innerHTML = `
+            <div class="board-card">
+                <div class="image-box">
+                    <img src="${board.pictures && board.pictures.length > 0 ? board.pictures[0] : '/images/default.jpg'}" alt="여행사진">
+                </div>
+                <div class="card-content">
+                    <h5 class="card-title">${board.title}</h5>
+                    <p class="card-excerpt">${board.content}</p>
+                    <div class="card-meta">
+                        <span><i class="bi bi-clock me-1"></i>${board.createTimeAgo}</span>
+                        <span><i class="bi bi-heart-fill text-danger me-1"></i>${board.likeCount}</span>
+                        <span><i class="bi bi-chat-dots me-1"></i>${commentCount}</span>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
 
-            cardCol.addEventListener("click", () => {
-                window.location.href = `/board/boardDetailForm/${board.id}`;
-            });
-
-            boardList.appendChild(cardCol);
+        cardCol.addEventListener("click", () => {
+            window.location.href = `/board/boardDetailForm/${board.id}`;
         });
-    }
 
+        boardList.appendChild(cardCol);
+    });
+}
     function renderPagination() {
         paginationContainer.innerHTML = "";
         const totalPosts = boards.length;
